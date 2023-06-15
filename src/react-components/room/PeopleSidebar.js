@@ -87,8 +87,9 @@ function getPersonName(person, intl) {
     id: "people-sidebar.person-name.you",
     defaultMessage: "You"
   });
+  const suffix = person.isMe ? `(${you})` : person.profile?.pronouns ? `(${person.profile.pronouns})` : "";
 
-  return person.profile.displayName + (person.isMe ? ` (${you})` : "");
+  return `${person.profile.displayName} ${suffix}`;
 }
 
 export function PeopleSidebar({
@@ -102,6 +103,14 @@ export function PeopleSidebar({
   isMod
 }) {
   const intl = useIntl();
+  const me = people.find(person => !!person.isMe);
+  const filteredPeople = people
+    .filter(person => !person.isMe)
+    .sort(a => {
+      return a.hand_raised ? -1 : 1;
+    });
+  me && filteredPeople.unshift(me);
+
   return (
     <Sidebar
       title={
@@ -123,33 +132,34 @@ export function PeopleSidebar({
       {!canVoiceChat && <PermissionNotification permission={"voice_chat"} />}
       {!voiceChatEnabled && isMod && <PermissionNotification permission={"voice_chat"} isMod={true} />}
       <List>
-        {people.map(person => {
-          const DeviceIcon = getDeviceIconComponent(person.context);
-          const VoiceIcon = getVoiceIconComponent(person.micPresence);
+        {!!people.length &&
+          filteredPeople.map(person => {
+            const DeviceIcon = getDeviceIconComponent(person.context);
+            const VoiceIcon = getVoiceIconComponent(person.micPresence);
 
-          return (
-            <ButtonListItem
-              className={styles.person}
-              key={person.id}
-              type="button"
-              onClick={e => onSelectPerson(person, e)}
-            >
-              {person.hand_raised && <HandRaisedIcon />}
-              {<DeviceIcon title={getDeviceLabel(person.context, intl)} />}
-              {!person.context.discord && VoiceIcon && <VoiceIcon title={getVoiceLabel(person.micPresence, intl)} />}
-              <p>{getPersonName(person, intl)}</p>
-              {person.roles.owner && (
-                <StarIcon
-                  title={intl.formatMessage({ id: "people-sidebar.moderator-label", defaultMessage: "Moderator" })}
-                  className={styles.moderatorIcon}
-                  width={12}
-                  height={12}
-                />
-              )}
-              <p className={styles.presence}>{getPresenceMessage(person.presence, intl)}</p>
-            </ButtonListItem>
-          );
-        })}
+            return (
+              <ButtonListItem
+                className={styles.person}
+                key={person.id}
+                type="button"
+                onClick={e => onSelectPerson(person, e)}
+              >
+                {person.hand_raised && <HandRaisedIcon />}
+                {<DeviceIcon title={getDeviceLabel(person.context, intl)} />}
+                {!person.context.discord && VoiceIcon && <VoiceIcon title={getVoiceLabel(person.micPresence, intl)} />}
+                <p>{getPersonName(person, intl)}</p>
+                {person.roles.owner && (
+                  <StarIcon
+                    title={intl.formatMessage({ id: "people-sidebar.moderator-label", defaultMessage: "Moderator" })}
+                    className={styles.moderatorIcon}
+                    width={12}
+                    height={12}
+                  />
+                )}
+                <p className={styles.presence}>{getPresenceMessage(person.presence, intl)}</p>
+              </ButtonListItem>
+            );
+          })}
       </List>
     </Sidebar>
   );

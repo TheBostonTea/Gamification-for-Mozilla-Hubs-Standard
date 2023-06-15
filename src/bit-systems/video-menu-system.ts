@@ -4,13 +4,13 @@ import { clamp, mapLinear } from "three/src/math/MathUtils";
 import { Text as TroikaText } from "troika-three-text";
 import { HubsWorld } from "../app";
 import {
-  AudioEmitter,
   CursorRaycastable,
   EntityStateDirty,
   Held,
   HeldRemoteRight,
   HoveredRemoteRight,
   MediaVideo,
+  MediaVideoData,
   NetworkedVideo,
   VideoMenu,
   VideoMenuItem
@@ -83,7 +83,7 @@ export function videoMenuSystem(world: HubsWorld, userinput: any) {
     const videoEid = VideoMenu.videoRef[eid];
     if (!videoEid) return;
     const menuObj = world.eid2obj.get(eid)!;
-    const video = (world.eid2obj.get(videoEid) as any).material.map.image as HTMLVideoElement;
+    const video = MediaVideoData.get(videoEid)!;
     const togglePlayVideo = userinput.get(paths.actions.cursor.right.togglePlayVideo);
     if (togglePlayVideo) {
       if (hasComponent(world, NetworkedVideo, videoEid)) {
@@ -135,8 +135,16 @@ export function videoMenuSystem(world: HubsWorld, userinput: any) {
     headObj.position.x = mapLinear(video.currentTime, 0, video.duration, -sliderHalfWidth, sliderHalfWidth);
     headObj.matrixNeedsUpdate = true;
 
-    const timeLabelRef = world.eid2obj.get(VideoMenu.timeLabelRef[eid])! as TroikaText;
-    timeLabelRef.text = `${timeFmt(video.currentTime)} / ${timeFmt(video.duration)}`;
+    const ratio = MediaVideo.ratio[videoEid];
+
+    const timeLabel = world.eid2obj.get(VideoMenu.timeLabelRef[eid])! as TroikaText;
+    timeLabel.text = `${timeFmt(video.currentTime)} / ${timeFmt(video.duration)}`;
+    timeLabel.position.setY(ratio / 2 - 0.02);
+    timeLabel.matrixNeedsUpdate = true;
+
+    const slider = world.eid2obj.get(VideoMenu.sliderRef[eid])!;
+    slider.position.setY(-(ratio / 2) + 0.025);
+    slider.matrixNeedsUpdate = true;
 
     if (rightMenuIndicatorCoroutine && rightMenuIndicatorCoroutine().done) {
       rightMenuIndicatorCoroutine = null;
