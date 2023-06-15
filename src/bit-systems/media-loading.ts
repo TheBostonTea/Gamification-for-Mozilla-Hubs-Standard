@@ -19,6 +19,9 @@ import { loadAudio } from "../utils/load-audio";
 import { MediaType, mediaTypeName, resolveMediaInfo } from "../utils/media-utils";
 import { EntityID } from "../utils/networking-types";
 
+import doorURL from "../assets/models/AnimatedDoorII.glb";
+console.warn("The URL is", doorURL)
+
 export function* waitForMediaLoaded(world: HubsWorld, eid: EntityID) {
   while (hasComponent(world, MediaLoader, eid)) {
     yield crNextFrame();

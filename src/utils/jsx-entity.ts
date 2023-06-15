@@ -38,7 +38,8 @@ import {
   Billboard,
   MaterialTag,
   VideoTextureSource,
-  Mirror
+  Mirror,
+  myDoor
 } from "../bit-components";
 import { inflateMediaLoader } from "../inflators/media-loader";
 import { inflateMediaFrame } from "../inflators/media-frame";
@@ -94,6 +95,7 @@ import { BoxColliderParams, inflateBoxCollider } from "../inflators/box-collider
 import { inflateTrimesh } from "../inflators/trimesh";
 import { HeightFieldParams, inflateHeightField } from "../inflators/heightfield";
 import { inflateAudioSettings } from "../inflators/audio-settings";
+import { inflateDoor } from "../inflators/door";
 
 preload(
   new Promise(resolve => {
@@ -458,6 +460,7 @@ const jsxInflators: Required<{ [K in keyof JSXComponentData]: InflatorFn }> = {
   waypointPreview: createDefaultInflator(WaypointPreview),
   pdf: inflatePDF,
   mediaLoader: inflateMediaLoader,
+
 
   // inflators that create Object3Ds
   mediaFrame: inflateMediaFrame,

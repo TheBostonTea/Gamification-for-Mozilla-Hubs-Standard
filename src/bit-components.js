@@ -313,3 +313,8 @@ export const LinearScale = defineComponent({
   targetY: Types.f32,
   targetZ: Types.f32
 });
+
+// Added Project code here
+export const myDoor = defineCompnent({
+  isOpen: Types.ui8
+});
