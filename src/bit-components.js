@@ -315,6 +315,6 @@ export const LinearScale = defineComponent({
 });
 
 // Added Project code here
-export const myDoor = defineCompnent({
+export const myDoor = defineComponent({
   isOpen: Types.ui8
 });
