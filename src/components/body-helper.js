@@ -46,8 +46,7 @@ AFRAME.registerComponent("body-helper", {
 
   update: function (prevData) {
     if (prevData) {
-      const eid = this.el.object3D.eid;
-      this.system.updateRigidBody(eid, this.data);
+      this.system.updateBody(this.uuid, this.data);
     }
   },
 

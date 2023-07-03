@@ -2,7 +2,7 @@ import React, { useCallback, useRef } from "react";
 import PropTypes from "prop-types";
 import { NoObjects, ObjectsSidebar, ObjectsSidebarItem } from "./ObjectsSidebar";
 import { List } from "../layout/List";
-import { useObjectList } from "./hooks/useObjectList";
+import { useObjectList } from "./useObjectList";
 
 export function ObjectsSidebarContainer({ onClose, hubChannel }) {
   const listRef = useRef();

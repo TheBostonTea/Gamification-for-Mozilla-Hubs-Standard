@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom";
 import InfiniteScroll from "react-infinite-scroller";
 import markdownit from "markdown-it";
 import { FormattedMessage } from "react-intl";
@@ -111,16 +111,14 @@ class WhatsNew extends Component {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const container = document.getElementById("ui-root");
-
-  const root = createRoot(container);
-  root.render(
+  ReactDOM.render(
     <WrappedIntlProvider>
       <ThemeProvider store={store}>
         <AuthContextProvider store={store}>
           <WhatsNew />
         </AuthContextProvider>
       </ThemeProvider>
-    </WrappedIntlProvider>
+    </WrappedIntlProvider>,
+    document.getElementById("ui-root")
   );
 });

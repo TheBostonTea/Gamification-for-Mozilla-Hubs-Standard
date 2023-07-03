@@ -1,11 +1,10 @@
 import { addComponent, addEntity, hasComponent } from "bitecs";
-import { Material, Mesh, Object3D } from "three";
+import { Material, Object3D } from "three";
 import { HubsWorld } from "../app";
-import { GLTFModel, MaterialTag, MixerAnimatableInitialize } from "../bit-components";
+import { GLTFModel, MaterialTag } from "../bit-components";
 import { addMaterialComponent, addObject3DComponent, gltfInflatorExists, gltfInflators } from "../utils/jsx-entity";
 import { mapMaterials } from "../utils/material-utils";
 import { EntityID } from "../utils/networking-types";
-import { inflateLoopAnimationInitialize, LoopAnimationParams } from "./loop-animation";
 
 function camelCase(s: string) {
   return s.replace(/-(\w)/g, (_, m) => m.toUpperCase());
@@ -14,15 +13,7 @@ function camelCase(s: string) {
 export type ModelParams = { model: Object3D };
 
 // These components are all handled in some special way, not through inflators
-const ignoredComponents = [
-  "visible",
-  "frustum",
-  "frustrum",
-  "shadow",
-  "networked",
-  "animation-mixer",
-  "loop-animation"
-];
+const ignoredComponents = ["visible", "frustum", "frustrum", "shadow", "networked"];
 
 function inflateComponents(
   world: HubsWorld,
@@ -95,10 +86,8 @@ export function inflateModel(world: HubsWorld, rootEid: number, { model }: Model
       if (obj === model) {
         throw new Error("Failed to inflate model. Can't inflate alternative object type on root scene.");
       }
-      if (replacement instanceof Mesh) replacement.reflectionProbeMode = "dynamic";
       swap.push([obj, replacement]);
     } else {
-      if (obj instanceof Mesh) obj.reflectionProbeMode = "dynamic";
       addObject3DComponent(world, eid, obj);
     }
   });
@@ -122,7 +111,6 @@ export function inflateModel(world: HubsWorld, rootEid: number, { model }: Model
   // These components are special because we want to do a one-off action
   // that we can't do in a regular inflator (because they depend on the object3D).
   // If more things need to run at this point, we may need to expand the api here.
-  const loopAnimationParams: LoopAnimationParams = [];
   model.traverse(obj => {
     const components = obj.userData.gltfExtensions?.MOZ_hubs_components || {};
     if (components.visible) {
@@ -138,10 +126,6 @@ export function inflateModel(world: HubsWorld, rootEid: number, { model }: Model
       });
     }
 
-    if (components["loop-animation"]) {
-      loopAnimationParams.push(components["loop-animation"]);
-    }
-
     // We have had both spellings at different times.
     if (components.frustrum) {
       components.frustum = components.frustrum;
@@ -155,16 +139,6 @@ export function inflateModel(world: HubsWorld, rootEid: number, { model }: Model
     }
   });
 
-  // Hubs loop-animation component is defined at glTF node level.
-  // The component data are collected above in the scene graph traverse and
-  // bitECS LoopAnimation Component is set to root entity for simpler implementation.
-  // TODO: Probably the Hubs loop-animation component should be defined at scene
-  //       or root level. Revisit the specification.
-  // See https://github.com/mozilla/hubs/pull/5938#discussion_r1163410185
-  if (model.animations !== undefined && model.animations.length > 0) {
-    addComponent(world, MixerAnimatableInitialize, rootEid);
-    inflateLoopAnimationInitialize(world, rootEid, loopAnimationParams);
-  }
-
   addComponent(world, GLTFModel, rootEid);
+  // TODO Animation Mixer
 }

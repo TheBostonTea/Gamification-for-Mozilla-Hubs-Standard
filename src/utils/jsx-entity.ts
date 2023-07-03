@@ -15,6 +15,7 @@ import {
   HoldableButton,
   HoverButton,
   MakeKinematicOnRelease,
+  AnimationMixer,
   Networked,
   NetworkedTransform,
   Object3DTag,
@@ -38,9 +39,7 @@ import {
   MaterialTag,
   VideoTextureSource,
   Mirror,
-  myDoor,
-  Quack,
-  MixerAnimatableInitialize
+  myDoor
 } from "../bit-components";
 import { inflateMediaLoader } from "../inflators/media-loader";
 import { inflateMediaFrame } from "../inflators/media-frame";
@@ -53,7 +52,6 @@ import { inflateVideoLoader, VideoLoaderParams } from "../inflators/video-loader
 import { inflateImageLoader, ImageLoaderParams } from "../inflators/image-loader";
 import { inflateModelLoader, ModelLoaderParams } from "../inflators/model-loader";
 import { inflateLink, LinkParams } from "../inflators/link";
-import { inflateLoopAnimationInitialize, LoopAnimationParams } from "../inflators/loop-animation";
 import { inflateSlice9 } from "../inflators/slice9";
 import { TextParams, inflateText } from "../inflators/text";
 import {
@@ -67,7 +65,7 @@ import {
 import { inflateSpawnpoint, inflateWaypoint, WaypointParams } from "../inflators/waypoint";
 import { inflateReflectionProbe, ReflectionProbeParams } from "../inflators/reflection-probe";
 import { HubsWorld } from "../app";
-import { Group, Material, Object3D, Texture } from "three";
+import { Group, Material, Object3D, Texture, VideoTexture } from "three";
 import { AlphaMode } from "./create-image-mesh";
 import { MediaLoaderParams } from "../inflators/media-loader";
 import { preload } from "./preload";
@@ -91,14 +89,13 @@ import { inflateAudioParams } from "../inflators/audio-params";
 import { AudioSourceParams, inflateAudioSource } from "../inflators/audio-source";
 import { AudioTargetParams, inflateAudioTarget } from "../inflators/audio-target";
 import { PhysicsShapeParams, inflatePhysicsShape } from "../inflators/physics-shape";
-import { inflateRigidBody, RigidBodyParams } from "../inflators/rigid-body";
+import { inflateRigidBody, RigiBodyParams } from "../inflators/rigid-body";
 import { AmmoShapeParams, inflateAmmoShape } from "../inflators/ammo-shape";
 import { BoxColliderParams, inflateBoxCollider } from "../inflators/box-collider";
 import { inflateTrimesh } from "../inflators/trimesh";
 import { HeightFieldParams, inflateHeightField } from "../inflators/heightfield";
 import { inflateAudioSettings } from "../inflators/audio-settings";
 import { inflateDoor } from "../inflators/door";
-import { HubsVideoTexture } from "../textures/HubsVideoTexture";
 
 preload(
   new Promise(resolve => {
@@ -258,8 +255,6 @@ export interface ComponentData {
   mirror?: MirrorParams;
   audioZone?: AudioZoneParams;
   audioParams?: AudioSettings;
-  mediaFrame?: any;
-  text?: TextParams;
 }
 
 type OptionalParams<T> = Partial<T> | true;
@@ -278,15 +273,13 @@ export interface JSXComponentData extends ComponentData {
     cacheKey: string;
   };
   video?: {
-    texture: HubsVideoTexture;
+    texture: VideoTexture;
     ratio: number;
     projection: ProjectionMode;
     autoPlay: boolean;
-    video: HTMLVideoElement;
   };
   networkedVideo?: true;
   videoMenu?: {
-    sliderRef: Ref;
     timeLabelRef: Ref;
     trackRef: Ref;
     headRef: Ref;
@@ -306,13 +299,12 @@ export interface JSXComponentData extends ComponentData {
   deletable?: true;
   makeKinematicOnRelease?: true;
   destroyAtExtremeDistance?: true;
-  quack?: true;
 
   // @TODO Define all the anys
   networked?: any;
   textButton?: any;
   hoverButton?: any;
-  rigidbody?: OptionalParams<RigidBodyParams>;
+  rigidbody?: OptionalParams<RigiBodyParams>;
   physicsShape?: OptionalParams<PhysicsShapeParams>;
   floatyObject?: any;
   networkedFloatyObject?: any;
@@ -356,16 +348,17 @@ export interface JSXComponentData extends ComponentData {
     captureDurLblRef: Ref;
     sndToggleRef: Ref;
   };
+  animationMixer?: any;
   mediaLoader?: MediaLoaderParams;
-  mixerAnimatable?: boolean;
   sceneRoot?: boolean;
   sceneLoader?: { src: string };
+  mediaFrame?: any;
   object3D?: any;
+  text?: TextParams;
   model?: ModelParams;
   networkDebug?: boolean;
   waypointPreview?: boolean;
   pdf?: PDFParams;
-  loopAnimation?: LoopAnimationParams;
 }
 
 export interface GLTFComponentData extends ComponentData {
@@ -427,9 +420,7 @@ export const commonInflators: Required<{ [K in keyof ComponentData]: InflatorFn 
   spotLight: inflateSpotLight,
   mirror: inflateMirror,
   audioZone: inflateAudioZone,
-  audioParams: inflateAudioParams,
-  mediaFrame: inflateMediaFrame,
-  text: inflateText
+  audioParams: inflateAudioParams
 };
 
 const jsxInflators: Required<{ [K in keyof JSXComponentData]: InflatorFn }> = {
@@ -459,6 +450,7 @@ const jsxInflators: Required<{ [K in keyof JSXComponentData]: InflatorFn }> = {
   linkHoverMenuItem: createDefaultInflator(LinkHoverMenuItem),
   pdfMenu: createDefaultInflator(PDFMenu),
   cameraTool: createDefaultInflator(CameraTool, { captureDurIdx: 1 }),
+  animationMixer: createDefaultInflator(AnimationMixer),
   networkedVideo: createDefaultInflator(NetworkedVideo),
   videoMenu: createDefaultInflator(VideoMenu),
   videoMenuItem: createDefaultInflator(VideoMenuItem),
@@ -468,14 +460,13 @@ const jsxInflators: Required<{ [K in keyof JSXComponentData]: InflatorFn }> = {
   waypointPreview: createDefaultInflator(WaypointPreview),
   pdf: inflatePDF,
   mediaLoader: inflateMediaLoader,
-  quack: createDefaultInflator(Quack),
-  mixerAnimatable: createDefaultInflator(MixerAnimatableInitialize),
-  loopAnimation: inflateLoopAnimationInitialize,
 
 
   // inflators that create Object3Ds
+  mediaFrame: inflateMediaFrame,
   object3D: addObject3DComponent,
   slice9: inflateSlice9,
+  text: inflateText,
   model: inflateModel,
   image: inflateImage,
   video: inflateVideo

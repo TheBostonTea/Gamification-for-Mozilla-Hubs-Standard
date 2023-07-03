@@ -1,4 +1,4 @@
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom";
 import React from "react";
 import "./utils/configs";
 import "./react-components/styles/global.scss";
@@ -119,7 +119,7 @@ function HubsCloudPage() {
 
 window.APP = { store };
 
-function CloudRoot() {
+function Root() {
   return (
     <WrappedIntlProvider>
       <ThemeProvider store={store}>
@@ -132,8 +132,5 @@ function CloudRoot() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("ui-root");
-
-  const root = createRoot(container);
-  root.render(<CloudRoot />);
+  ReactDOM.render(<Root />, document.getElementById("ui-root"));
 });

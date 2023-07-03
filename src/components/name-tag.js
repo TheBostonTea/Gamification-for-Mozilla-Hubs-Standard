@@ -40,7 +40,6 @@ AFRAME.registerComponent("name-tag", {
   init() {
     this.store = window.APP.store;
     this.displayName = null;
-    this.pronouns = null;
     this.identityName = null;
     this.isTalking = false;
     this.isTyping = false;
@@ -62,7 +61,6 @@ AFRAME.registerComponent("name-tag", {
     this.onModelLoaded = this.onModelLoaded.bind(this);
     this.onModelIkFirstTick = this.onModelIkFirstTick.bind(this);
     this.onStateChanged = this.onStateChanged.bind(this);
-    this.updateNametagWidth = this.updateNametagWidth.bind(this);
 
     this.nametag = this.el.object3D;
     this.nametagIdentityName = this.el.querySelector(".identityName").object3D;
@@ -71,7 +69,6 @@ AFRAME.registerComponent("name-tag", {
     this.recordingBadge = this.el.querySelector(".recordingBadge").object3D;
     this.modBadge = this.el.querySelector(".modBadge").object3D;
     this.nametagText = this.el.querySelector(".nametag-text").object3D;
-    this.pronounsText = this.el.querySelector(".pronouns-text").object3D;
 
     this.handRaised = new THREE.Mesh(handRaisedGeometry, handRaisedMaterial);
     this.handRaised.position.set(0, -0.3, 0.001);
@@ -201,7 +198,6 @@ AFRAME.registerComponent("name-tag", {
 
   updateFromPresenceMeta(presenceMeta) {
     this.displayName = presenceMeta.profile.displayName;
-    this.pronouns = presenceMeta.profile.pronouns;
     this.identityName = presenceMeta.profile.identityName;
     this.isRecording = !!(presenceMeta.streaming || presenceMeta.recording);
     this.isOwner = !!(presenceMeta.roles && presenceMeta.roles.owner);
@@ -209,25 +205,24 @@ AFRAME.registerComponent("name-tag", {
     this.isHandRaised = !!presenceMeta.hand_raised;
     if (this.isAvatarReady) {
       this.updateDisplayName();
-      this.updatePronouns();
       this.updateHandRaised();
       this.resizeNameTag();
     }
   },
 
-  updateNametagWidth() {
-    this.pronounsText.el.components["text"].getSize(this.size);
-    const pronounsTextSize = this.size.x || 0;
-    this.nametagText.el.components["text"].getSize(this.size);
-    this.size.x = Math.max(this.size.x, pronounsTextSize, NAMETAG_MIN_WIDTH);
-    this.resizeNameTag();
-  },
-
   updateDisplayName() {
     if (this.displayName && this.displayName !== this.prevDisplayName) {
-      this.nametagText.el.addEventListener("text-updated", () => this.updateNametagWidth(), {
-        once: true
-      });
+      this.nametagText.el.addEventListener(
+        "text-updated",
+        () => {
+          if (this.nametagText.el) {
+            this.nametagText.el.components["text"].getSize(this.size);
+            this.size.x = Math.max(this.size.x, NAMETAG_MIN_WIDTH);
+            this.resizeNameTag();
+          }
+        },
+        { once: true }
+      );
       if (this.displayName.length > DISPLAY_NAME_LENGTH) {
         this.displayName = this.displayName.slice(0, DISPLAY_NAME_LENGTH).concat("...");
       }
@@ -242,21 +237,6 @@ AFRAME.registerComponent("name-tag", {
         this.identityName = this.identityName.slice(0, DISPLAY_NAME_LENGTH).concat("...");
       }
       this.nametagIdentityName.el.setAttribute("text", { value: this.identityName });
-    }
-  },
-
-  updatePronouns() {
-    if (this.pronouns !== this.prevPronouns) {
-      this.pronounsText.el.addEventListener("text-updated", () => this.updateNametagWidth(), {
-        once: true
-      });
-      if (this.pronouns.length > DISPLAY_NAME_LENGTH) {
-        this.pronouns = this.pronouns.slice(0, DISPLAY_NAME_LENGTH).concat("...");
-      }
-      this.pronounsText.el.setAttribute("text", {
-        value: this.pronouns ? `(${this.pronouns})` : ""
-      });
-      this.prevPronouns = this.pronouns;
     }
   },
 
@@ -282,14 +262,11 @@ AFRAME.registerComponent("name-tag", {
       this.avatarAABBSize.y / 2 +
       NAMETAG_OFFSET;
     this.nametagElPosY = this.nametagHeight + (this.isHandRaised ? NAMETAG_OFFSET : 0);
-    this.pronounsText.el && this.pronounsText.el.components["text"].getSize(this.size);
-    const pronounsTextSize = this.size.x;
     this.nametagText.el.components["text"].getSize(this.size);
-    this.size.x = Math.max(this.size.x, pronounsTextSize, NAMETAG_MIN_WIDTH);
+    this.size.x = Math.max(this.size.x, NAMETAG_MIN_WIDTH);
     this.isAvatarReady = true;
 
     this.updateDisplayName();
-    this.updatePronouns();
     this.updateHandRaised();
     this.resizeNameTag();
   },

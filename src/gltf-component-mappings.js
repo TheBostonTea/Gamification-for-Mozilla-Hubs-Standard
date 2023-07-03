@@ -133,7 +133,6 @@ import { setInitialNetworkedData } from "./utils/assign-network-ids";
 /** @jsx createElementEntity */ createElementEntity;
 
 AFRAME.GLTFModelPlus.registerComponent("media-frame", "media-frame", (el, _componentName, componentData) => {
-  // eslint-disable-next-line react/no-unknown-property
   const eid = renderAsEntity(APP.world, <entity mediaFrame={componentData} />);
 
   addComponent(APP.world, Networked, eid);

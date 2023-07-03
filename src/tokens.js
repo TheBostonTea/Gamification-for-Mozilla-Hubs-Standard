@@ -1,5 +1,5 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom";
 import { WrappedIntlProvider } from "./react-components/wrapped-intl-provider";
 import registerTelemetry from "./telemetry";
 import "./utils/theme";
@@ -16,7 +16,7 @@ registerTelemetry("/tokens", "Backend API Tokens Page");
 
 window.APP = { store };
 
-function TokensRoot() {
+function Root() {
   return (
     <WrappedIntlProvider>
       <ThemeProvider store={store}>
@@ -28,7 +28,4 @@ function TokensRoot() {
   );
 }
 
-const container = document.getElementById("ui-root");
-
-const root = createRoot(container);
-root.render(<TokensRoot />);
+ReactDOM.render(<Root />, document.getElementById("ui-root"));

@@ -1,4 +1,4 @@
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom";
 import React, { Component } from "react";
 import "./utils/configs";
 import { FormattedMessage } from "react-intl";
@@ -82,8 +82,5 @@ class DiscordPage extends Component {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("ui-root");
-
-  const root = createRoot(container);
-  root.render(<DiscordPage />);
+  ReactDOM.render(<DiscordPage />, document.getElementById("ui-root"));
 });

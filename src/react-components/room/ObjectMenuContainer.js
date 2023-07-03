@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { ObjectMenu, ObjectMenuButton } from "./ObjectMenu";
-import { useObjectList } from "./hooks/useObjectList";
+import { useObjectList } from "./useObjectList";
 import {
   usePinObject,
   useRemoveObject,

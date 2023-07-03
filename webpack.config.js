@@ -63,7 +63,7 @@ function createHTTPSConfig() {
 }
 
 function getModuleDependencies(moduleName) {
-  const deps = packageLock.packages;
+  const deps = packageLock.dependencies;
   const arr = [];
 
   const gatherDeps = name => {
@@ -561,6 +561,7 @@ module.exports = async (env, argv) => {
                     parts.shift();
                     rootPath = parts.join(path.sep);
                   }
+                  // console.log(path, name, contenthash, ext);
                   return rootPath + "[name]-[contenthash].[ext]";
                 }
               }

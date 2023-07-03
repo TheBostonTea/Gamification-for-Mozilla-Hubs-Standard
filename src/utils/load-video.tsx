@@ -1,14 +1,13 @@
 /** @jsx createElementEntity */
 import { createElementEntity } from "../utils/jsx-entity";
 import { ProjectionMode } from "./projection-mode";
+import { VideoTexture } from "three";
 import { renderAsEntity } from "../utils/jsx-entity";
 import { loadVideoTexture } from "../utils/load-video-texture";
 import { HubsWorld } from "../app";
-import { HubsVideoTexture } from "../textures/HubsVideoTexture";
 
 export function* loadVideo(world: HubsWorld, url: string, contentType: string) {
-  const { texture, ratio, video }: { texture: HubsVideoTexture; ratio: number; video: HTMLVideoElement } =
-    yield loadVideoTexture(url, contentType);
+  const { texture, ratio }: { texture: VideoTexture; ratio: number } = yield loadVideoTexture(url, contentType);
 
   return renderAsEntity(
     world,
@@ -21,8 +20,7 @@ export function* loadVideo(world: HubsWorld, url: string, contentType: string) {
         texture,
         ratio,
         autoPlay: true,
-        projection: ProjectionMode.FLAT,
-        video
+        projection: ProjectionMode.FLAT
       }}
     ></entity>
   );

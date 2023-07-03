@@ -25,8 +25,6 @@ export interface Button3DParams extends Attrs {
   name?: string;
   type: ButtonType;
   labelRef?: Ref;
-  holdable?: true;
-  holdableButton?: true;
 }
 
 export function Button3D({

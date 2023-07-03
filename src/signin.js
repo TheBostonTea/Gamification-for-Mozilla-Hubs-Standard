@@ -1,5 +1,5 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom";
 import { WrappedIntlProvider } from "./react-components/wrapped-intl-provider";
 import registerTelemetry from "./telemetry";
 import "./utils/theme";
@@ -16,7 +16,7 @@ registerTelemetry("/signin", "Hubs Sign In Page");
 
 window.APP = { store };
 
-function SignInRoot() {
+function Root() {
   return (
     <WrappedIntlProvider>
       <ThemeProvider store={store}>
@@ -32,7 +32,4 @@ function SignInRoot() {
   );
 }
 
-const container = document.getElementById("ui-root");
-
-const root = createRoot(container);
-root.render(<SignInRoot />);
+ReactDOM.render(<Root />, document.getElementById("ui-root"));

@@ -9,7 +9,7 @@ and polyfilling.
 */
 
 import React from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom";
 import copy from "copy-to-clipboard";
 import { detectOS } from "detect-browser";
 import "./react-components/styles/global.scss";
@@ -141,7 +141,5 @@ class Support extends React.Component {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("support-root");
-  const root = createRoot(container);
-  root.render(<Support />);
+  ReactDOM.render(<Support />, document.getElementById("support-root"));
 });

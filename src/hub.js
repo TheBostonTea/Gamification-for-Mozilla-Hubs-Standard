@@ -2,8 +2,7 @@ import {
   getCurrentHubId,
   updateVRHudPresenceCount,
   updateSceneCopresentState,
-  createHubChannelParams,
-  isLockedDownDemoRoom
+  createHubChannelParams
 } from "./utils/hub-utils";
 import "./utils/debug-log";
 import configs from "./utils/configs";
@@ -140,8 +139,8 @@ import "./components/avatar-inspect-collider";
 import "./components/video-texture-target";
 import "./components/mirror";
 
+import ReactDOM from "react-dom";
 import React from "react";
-import { createRoot } from "react-dom/client";
 import { Router, Route } from "react-router-dom";
 import { createBrowserHistory, createMemoryHistory } from "history";
 import { pushHistoryState } from "./utils/history";
@@ -159,7 +158,6 @@ import MessageDispatch from "./message-dispatch";
 import SceneEntryManager from "./scene-entry-manager";
 import Subscriptions from "./subscriptions";
 import { createInWorldLogMessage } from "./react-components/chat-message";
-import { fetchRandomDefaultAvatarId } from "./utils/identity.js";
 
 import "./systems/nav";
 import "./systems/frame-scheduler";
@@ -289,8 +287,6 @@ const isBotMode = qsTruthy("bot");
 const isTelemetryDisabled = qsTruthy("disable_telemetry");
 const isDebug = qsTruthy("debug");
 
-let root;
-
 if (!isBotMode && !isTelemetryDisabled) {
   registerTelemetry("/hub", "Room Landing Page");
 }
@@ -346,7 +342,7 @@ function mountUI(props = {}) {
     qsTruthy("allow_idle") || (process.env.NODE_ENV === "development" && !qs.get("idle_timeout"));
   const forcedVREntryType = qsVREntryType;
 
-  root.render(
+  ReactDOM.render(
     <WrappedIntlProvider>
       <ThemeProvider store={store}>
         <Router history={history}>
@@ -374,7 +370,8 @@ function mountUI(props = {}) {
           />
         </Router>
       </ThemeProvider>
-    </WrappedIntlProvider>
+    </WrappedIntlProvider>,
+    document.getElementById("ui-root")
   );
 }
 
@@ -575,17 +572,10 @@ function handleHubChannelJoined(entryManager, hubChannel, messageDispatch, data)
 
   console.log(`Dialog host: ${hub.host}:${hub.port}`);
 
-  // Mute media until the scene has been fully loaded.
-  // We intentionally want voice to be unmuted.
-  const audioSystem = scene.systems["hubs-systems"].audioSystem;
-  audioSystem.setMediaGainOverride(0);
   remountUI({
     messageDispatch: messageDispatch,
     onSendMessage: messageDispatch.dispatch,
-    onLoaded: () => {
-      audioSystem.setMediaGainOverride(1);
-      store.executeOnLoadActions(scene);
-    },
+    onLoaded: () => store.executeOnLoadActions(scene),
     onMediaSearchResultEntrySelected: (entry, selectAction) =>
       scene.emit("action_selected_media_result_entry", { entry, selectAction }),
     onMediaSearchCancelled: entry => scene.emit("action_media_search_cancelled", entry),
@@ -716,11 +706,6 @@ async function runBotMode(scene, entryManager) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  if (!root) {
-    const container = document.getElementById("ui-root");
-    root = createRoot(container);
-  }
-
   if (isOAuthModal) {
     return;
   }
@@ -738,8 +723,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const browser = detect();
   // HACK - it seems if we don't initialize the mic track up-front, voices can drop out on iOS
   // safari when initializing it later.
-  // Seems to be working for Safari >= 16.4. We should revisit this in the future and remove it completely.
-  if (["iOS", "Mac OS"].includes(detectedOS) && ["safari", "ios"].includes(browser.name) && browser.version < "16.4") {
+  if (["iOS", "Mac OS"].includes(detectedOS) && ["safari", "ios"].includes(browser.name)) {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (e) {
@@ -849,18 +833,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       () => hubChannel.updateScene(sceneInfo),
       SignInMessages.changeScene
     );
-  });
-
-  scene.addEventListener("hub_updated", async () => {
-    if (isLockedDownDemoRoom()) {
-      const avatarRig = document.querySelector("#avatar-rig");
-      const avatarId = await fetchRandomDefaultAvatarId();
-      avatarRig.setAttribute("player-info", { avatarSrc: await getAvatarSrc(avatarId) });
-    } else {
-      if (scene.is("entered")) {
-        entryManager._setPlayerInfoFromProfile(true);
-      }
-    }
   });
 
   remountUI({
@@ -1390,14 +1362,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateEnvironmentForHub(hub, entryManager);
       });
 
-      const sceneName = hub.scene ? hub.scene.name : "a custom URL";
-
-      console.log(`Entering new scene: ${sceneName}`);
-
       messageDispatch.receive({
         type: "scene_changed",
         name: displayName,
-        sceneName
+        sceneName: hub.scene ? hub.scene.name : "a custom URL"
       });
     }
 

@@ -1,12 +1,11 @@
 import { addComponent, defineQuery, enterQuery, exitQuery, hasComponent } from "bitecs";
-import { Mesh } from "three";
+import { Mesh, MeshStandardMaterial } from "three";
 import { HubsWorld } from "../app";
 import {
   AudioParams,
   AudioSettingsChanged,
   MediaLoaded,
   MediaVideo,
-  MediaVideoData,
   Networked,
   NetworkedVideo,
   Owned
@@ -32,7 +31,7 @@ const mediaLoadedQuery = enterQuery(mediaLoadStatusQuery);
 export function videoSystem(world: HubsWorld, audioSystem: AudioSystem) {
   mediaVideoEnterQuery(world).forEach(function (videoEid) {
     const videoObj = world.eid2obj.get(videoEid) as Mesh;
-    const video = MediaVideoData.get(videoEid)!;
+    const video = (videoObj.material as MeshStandardMaterial).map!.image as HTMLVideoElement;
     if (MediaVideo.autoPlay[videoEid]) {
       video.play().catch(() => {
         // Need to deal with the fact play() may fail if user has not interacted with browser yet.
@@ -61,7 +60,6 @@ export function videoSystem(world: HubsWorld, audioSystem: AudioSystem) {
     audioParamsEid && APP.audioOverrides.delete(audioParamsEid);
     Emitter2Params.delete(videoEid);
     Emitter2Audio.delete(videoEid);
-    MediaVideoData.delete(videoEid);
   });
 
   networkedVideoEnterQuery(world).forEach(function (eid) {
@@ -71,7 +69,7 @@ export function videoSystem(world: HubsWorld, audioSystem: AudioSystem) {
   });
 
   networkedVideoQuery(world).forEach(function (eid) {
-    const video = MediaVideoData.get(eid)!;
+    const video = (world.eid2obj.get(eid) as any).material.map.image as HTMLVideoElement;
     if (hasComponent(world, Owned, eid)) {
       NetworkedVideo.time[eid] = video.currentTime;
       let flags = 0;

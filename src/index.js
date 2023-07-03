@@ -1,5 +1,5 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom";
 import { WrappedIntlProvider } from "./react-components/wrapped-intl-provider";
 import registerTelemetry from "./telemetry";
 import "./utils/theme";
@@ -13,7 +13,7 @@ registerTelemetry("/home", "Hubs Home Page");
 
 window.APP = { store };
 
-function HomeRoot() {
+function Root() {
   return (
     <WrappedIntlProvider>
       <ThemeProvider store={store}>
@@ -25,6 +25,4 @@ function HomeRoot() {
   );
 }
 
-const container = document.getElementById("home-root");
-const root = createRoot(container);
-root.render(<HomeRoot />);
+ReactDOM.render(<Root />, document.getElementById("home-root"));

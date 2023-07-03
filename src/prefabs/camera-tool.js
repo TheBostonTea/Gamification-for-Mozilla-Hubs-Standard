@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-/* eslint-disable react/no-unknown-property */
 /** @jsx createElementEntity */
 import cameraModelSrc from "../assets/camera_tool.glb";
 import { Layers } from "../camera-layers";

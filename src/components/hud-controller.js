@@ -1,5 +1,4 @@
 import { CAMERA_MODE_FIRST_PERSON } from "../systems/camera-system";
-import { isLockedDownDemoRoom } from "../utils/hub-utils";
 const TWOPI = Math.PI * 2;
 function deltaAngle(a, b) {
   const p = Math.abs(b - a) % TWOPI;
@@ -76,10 +75,10 @@ AFRAME.registerComponent("hud-controller", {
       hud.rotation.x = 0;
       hud.rotation.z = 0;
     }
+
     hud.visible =
       (!hudOutOfView || forceHudVisible) &&
-      this.el.sceneEl.systems["hubs-systems"].cameraSystem.mode === CAMERA_MODE_FIRST_PERSON &&
-      !isLockedDownDemoRoom();
+      this.el.sceneEl.systems["hubs-systems"].cameraSystem.mode === CAMERA_MODE_FIRST_PERSON;
     hud.position.y = (this.isYLocked ? this.lockedHeadPositionY : head.position.y) + offset + (1 - t) * offset;
     hud.rotation.x = (1 - t) * THREE.MathUtils.DEG2RAD * 90;
     hud.matrixNeedsUpdate = true;

@@ -1,4 +1,5 @@
 import { waitForDOMContentLoaded } from "./async-utils";
+import configs from "./configs";
 import { store } from "./store-instance";
 
 // NOTE these should be synchronized with the top of shared.scss
@@ -146,11 +147,6 @@ function updateTextButtonColors() {
   }
 }
 
-function applyThemeToBody() {
-  const theme = getCurrentTheme();
-  document.body.setAttribute("data-theme", theme.name.toLowerCase().includes("dark") ? "dark" : "light");
-}
-
 function onThemeChanged(listener) {
   store.addEventListener("themechanged", listener);
   const [_darkModeQuery, removeDarkModeListener] = registerDarkModeQuery(listener);
@@ -168,19 +164,13 @@ waitForDOMContentLoaded().then(() => {
     return;
   }
 
-  // Set initial theme
-  const theme = getCurrentTheme();
-  if (theme && theme.name.toLowerCase().includes("dark")) {
-    document.body.setAttribute("data-theme", "dark");
+  if (configs.APP_CONFIG && configs.APP_CONFIG.theme && configs.APP_CONFIG.theme["dark-theme"]) {
+    document.body.classList.add("dark-theme");
   } else {
-    document.body.setAttribute("data-theme", "light");
+    document.body.classList.add("light-theme");
   }
-
   updateTextButtonColors();
-  onThemeChanged(() => {
-    updateTextButtonColors();
-    applyThemeToBody();
-  });
+  onThemeChanged(updateTextButtonColors);
 });
 
 function applyThemeToTextButton(el, highlighted) {
@@ -202,7 +192,6 @@ export {
   getDefaultTheme,
   getThemeColor,
   onThemeChanged,
-  applyThemeToBody,
   registerDarkModeQuery,
   themes,
   tryGetTheme
