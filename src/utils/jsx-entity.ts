@@ -95,6 +95,7 @@ import { inflateTrimesh } from "../inflators/trimesh";
 import { HeightFieldParams, inflateHeightField } from "../inflators/heightfield";
 import { inflateAudioSettings } from "../inflators/audio-settings";
 import { DoorParams, inflateDoor } from "../inflators/door";
+import { inflateQuestion, QuestionParams } from "../inflators/question";
 
 preload(
   new Promise(resolve => {
@@ -393,6 +394,7 @@ export interface GLTFComponentData extends ComponentData {
   // Says there might be a component that will contain (door), of the signature
   // DoorParams from door.ts
   door?: DoorParams;
+  question?: QuestionParams;
 }
 
 declare global {
@@ -509,7 +511,8 @@ export const gltfInflators: Required<{ [K in keyof GLTFComponentData]: InflatorF
   audioSettings: inflateAudioSettings,
   // Same name as the (door).ts and the custom component (door).
   // Ties "door" to its inflator
-  door: inflateDoor
+  door: inflateDoor,
+  question: inflateQuestion
 };
 
 function jsxInflatorExists(name: string): name is keyof JSXComponentData {

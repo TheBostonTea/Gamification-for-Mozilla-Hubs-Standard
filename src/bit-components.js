@@ -314,9 +314,17 @@ export const LinearScale = defineComponent({
   targetZ: Types.f32
 });
 
+//-- My Components Here --//
+
 // Register "Door", with a ui8 type; the smallest integer
 // available in typescript. Will hold the boolean in the
 // right most bit. 
 export const Door = defineComponent({
   isOpen: Types.ui8
 });
+
+// Trick needed to make the conversion from string to integer work!
+export const Question = defineComponent({
+  question : Types.ui32
+});
+Question.question[$isStringType] = true;
