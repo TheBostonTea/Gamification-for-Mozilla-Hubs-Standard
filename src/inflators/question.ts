@@ -1,6 +1,6 @@
 import { addComponent } from "bitecs";
 import { HubsWorld } from "../app";
-import { Question } from "../bit-components";
+import { CursorRaycastable, Question, RemoteHoverTarget, SingleActionButton } from "../bit-components";
 
 
 export type QuestionParams = {
@@ -11,4 +11,8 @@ export function inflateQuestion( world: HubsWorld, eid: number, params: Question
     console.log("Inflate question %d", eid);
     addComponent(world, Question, eid);
     Question.question[eid] = APP.getSid(params.question);
+
+    addComponent(world, RemoteHoverTarget, eid);
+    addComponent(world, CursorRaycastable, eid);
+    addComponent(world, SingleActionButton, eid);
 }

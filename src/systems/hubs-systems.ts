@@ -77,6 +77,7 @@ import { audioTargetSystem } from "../bit-systems/audio-target-system";
 import { scenePreviewCameraSystem } from "../bit-systems/scene-preview-camera-system";
 import { linearTransformSystem } from "../bit-systems/linear-transform";
 import { doorSystem } from "../bit-systems/door-system";
+import { questionSystem } from "../bit-systems/question-system";
 
 declare global {
   interface Window {
@@ -264,6 +265,7 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
   // Or what the dependencies will be, but here is probably a safe bet.
   // NOTE: Needs to run after interaction systems that set "Interactable".
   doorSystem(world);
+  questionSystem(world);
 
   // All systems that update text properties should run before this
   textSystem(world);
