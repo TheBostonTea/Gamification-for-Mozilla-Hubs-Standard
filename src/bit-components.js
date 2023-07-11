@@ -314,7 +314,9 @@ export const LinearScale = defineComponent({
   targetZ: Types.f32
 });
 
-// Added Project code here
-export const myDoor = defineComponent({
+// Register "Door", with a ui8 type; the smallest integer
+// available in typescript. Will hold the boolean in the
+// right most bit. 
+export const Door = defineComponent({
   isOpen: Types.ui8
 });

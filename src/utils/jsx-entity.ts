@@ -38,8 +38,7 @@ import {
   Billboard,
   MaterialTag,
   VideoTextureSource,
-  Mirror,
-  myDoor
+  Mirror
 } from "../bit-components";
 import { inflateMediaLoader } from "../inflators/media-loader";
 import { inflateMediaFrame } from "../inflators/media-frame";
@@ -95,7 +94,7 @@ import { BoxColliderParams, inflateBoxCollider } from "../inflators/box-collider
 import { inflateTrimesh } from "../inflators/trimesh";
 import { HeightFieldParams, inflateHeightField } from "../inflators/heightfield";
 import { inflateAudioSettings } from "../inflators/audio-settings";
-import { inflateDoor } from "../inflators/door";
+import { DoorParams, inflateDoor } from "../inflators/door";
 
 preload(
   new Promise(resolve => {
@@ -390,6 +389,10 @@ export interface GLTFComponentData extends ComponentData {
   boxCollider?: BoxColliderParams;
   trimesh?: true;
   heightfield?: HeightFieldParams;
+  // Needs to be the same name as the (door).ts and the (door) component.
+  // Says there might be a component that will contain (door), of the signature
+  // DoorParams from door.ts
+  door?: DoorParams;
 }
 
 declare global {
@@ -503,7 +506,10 @@ export const gltfInflators: Required<{ [K in keyof GLTFComponentData]: InflatorF
   boxCollider: inflateBoxCollider,
   trimesh: inflateTrimesh,
   heightfield: inflateHeightField,
-  audioSettings: inflateAudioSettings
+  audioSettings: inflateAudioSettings,
+  // Same name as the (door).ts and the custom component (door).
+  // Ties "door" to its inflator
+  door: inflateDoor
 };
 
 function jsxInflatorExists(name: string): name is keyof JSXComponentData {
