@@ -76,6 +76,7 @@ import { textSystem } from "../bit-systems/text";
 import { audioTargetSystem } from "../bit-systems/audio-target-system";
 import { scenePreviewCameraSystem } from "../bit-systems/scene-preview-camera-system";
 import { linearTransformSystem } from "../bit-systems/linear-transform";
+import { doorSystem } from "../bit-systems/door-system";
 
 declare global {
   interface Window {
@@ -259,6 +260,10 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
   hubsSystems.nameTagSystem.tick();
   simpleWaterSystem(world);
   linearTransformSystem(world);
+  // Probably put new systems here! It's as of yet unclear what the ordering might be,
+  // Or what the dependencies will be, but here is probably a safe bet.
+  // NOTE: Needs to run after interaction systems that set "Interactable".
+  doorSystem(world);
 
   // All systems that update text properties should run before this
   textSystem(world);
