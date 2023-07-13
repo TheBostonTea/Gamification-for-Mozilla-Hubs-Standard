@@ -331,5 +331,7 @@ Question.question[$isStringType] = true;
 
 export const QuestionInterface = defineComponent({
     //TODO: Remove!
-    questionBoxRef: Types.eid
+    targetRef: Types.eid,
+    questionBoxRef: Types.eid//,
+    //clearTargetTimer: Types.f64
 });

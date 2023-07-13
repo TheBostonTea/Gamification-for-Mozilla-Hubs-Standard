@@ -52,9 +52,9 @@ const textTexture = textureLoader.load(textSrc);
 // }
 
 
-const UI_Z = 0.001;
+const UI_Z = 1.0;
 const POSITION_TEXT: ArrayVec3 = [0.0, 0.45, UI_Z]
-const PAGE_LABEL_COLOR = new Color(0.1, 0.1, 0.1);
+const PAGE_LABEL_COLOR = new Color(1, 1, 1);
 export function QuestionInterfacePrefab() {
   const refQuestion = createRef();
   return (
