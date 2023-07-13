@@ -88,7 +88,6 @@ function flushToObject3Ds(world: HubsWorld, menu: EntityID, frozen: boolean) {
   if (target) {
     const numPages = PDFResourcesMap.get(target)!.pdf.numPages;
     (world.eid2obj.get(PDFMenu.pageLabelRef[menu]) as Text).text = `${NetworkedPDF.pageNumber[target]} / ${numPages}`;
-    (world.eid2obj.get(PDFMenu.textBoxRef[menu]) as Text).text = `This is a test!`;
   }
 }
 

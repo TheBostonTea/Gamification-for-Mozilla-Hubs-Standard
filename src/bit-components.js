@@ -235,8 +235,6 @@ export const PDFMenu = defineComponent({
   prevButtonRef: Types.eid,
   nextButtonRef: Types.eid,
   pageLabelRef: Types.eid,
-  //TODO: Remove!
-  textBoxRef: Types.eid,
   targetRef: Types.eid,
   clearTargetTimer: Types.f64
 });
@@ -330,3 +328,8 @@ export const Question = defineComponent({
   question : Types.ui32
 });
 Question.question[$isStringType] = true;
+
+export const QuestionInterface = defineComponent({
+    //TODO: Remove!
+    questionBoxRef: Types.eid
+});

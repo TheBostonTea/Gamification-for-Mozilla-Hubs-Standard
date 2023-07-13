@@ -38,7 +38,8 @@ import {
   Billboard,
   MaterialTag,
   VideoTextureSource,
-  Mirror
+  Mirror,
+  QuestionInterface
 } from "../bit-components";
 import { inflateMediaLoader } from "../inflators/media-loader";
 import { inflateMediaFrame } from "../inflators/media-frame";
@@ -333,8 +334,6 @@ export interface JSXComponentData extends ComponentData {
     prevButtonRef: Ref;
     nextButtonRef: Ref;
     pageLabelRef: Ref;
-    //TODO: Remove!
-    textBoxRef: Ref;
   };
   cameraTool?: {
     snapMenuRef: Ref;
@@ -350,6 +349,9 @@ export interface JSXComponentData extends ComponentData {
     captureDurLblRef: Ref;
     sndToggleRef: Ref;
   };
+  questionInterface?: {
+    questionBoxRef: Ref;
+  }
   animationMixer?: any;
   mediaLoader?: MediaLoaderParams;
   sceneRoot?: boolean;
@@ -465,6 +467,7 @@ const jsxInflators: Required<{ [K in keyof JSXComponentData]: InflatorFn }> = {
   sceneLoader: createDefaultInflator(SceneLoader),
   networkDebug: createDefaultInflator(NetworkDebug),
   waypointPreview: createDefaultInflator(WaypointPreview),
+  questionInterface:createDefaultInflator(QuestionInterface),
   pdf: inflatePDF,
   mediaLoader: inflateMediaLoader,
 
