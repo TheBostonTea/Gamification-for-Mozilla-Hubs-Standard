@@ -55,7 +55,7 @@ const textTexture = textureLoader.load(textSrc);
 const UI_Z = 0.001;
 const POSITION_TEXT: ArrayVec3 = [0.0, 0.45, UI_Z]
 const PAGE_LABEL_COLOR = new Color(0.1, 0.1, 0.1);
-export function PDFMenuPrefab() {
+export function QuestionInterfacePrefab() {
   const refQuestion = createRef();
   return (
     <entity

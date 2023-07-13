@@ -209,6 +209,8 @@ preload(addToScene(PDFMenuPrefab(), false));
 preload(addToScene(ObjectMenuPrefab(), false));
 preload(addToScene(ObjectMenuPrefab(), false));
 preload(addToScene(LinkHoverMenuPrefab(), false));
+//Added the question-interface!
+preload(addToScene(QuestionInterfacePrefab(), false));
 preload(loadWaypointPreviewModel().then(() => addToScene(WaypointPreview(), false)));
 
 const store = window.APP.store;
@@ -264,6 +266,7 @@ import { listenForNetworkMessages } from "./utils/listen-for-network-messages";
 import { exposeBitECSDebugHelpers } from "./bitecs-debug-helpers";
 import { loadLegacyRoomObjects } from "./utils/load-legacy-room-objects";
 import { loadSavedEntityStates } from "./utils/entity-state-utils";
+import { QuestionInterfacePrefab } from "./prefabs/question-interface";
 
 const PHOENIX_RELIABLE_NAF = "phx-reliable";
 NAF.options.firstSyncSource = PHOENIX_RELIABLE_NAF;
