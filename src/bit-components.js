@@ -235,6 +235,8 @@ export const PDFMenu = defineComponent({
   prevButtonRef: Types.eid,
   nextButtonRef: Types.eid,
   pageLabelRef: Types.eid,
+  //TODO: Remove!
+  textBoxRef: Types.eid,
   targetRef: Types.eid,
   clearTargetTimer: Types.f64
 });

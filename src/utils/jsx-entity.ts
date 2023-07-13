@@ -333,6 +333,8 @@ export interface JSXComponentData extends ComponentData {
     prevButtonRef: Ref;
     nextButtonRef: Ref;
     pageLabelRef: Ref;
+    //TODO: Remove!
+    textBoxRef: Ref;
   };
   cameraTool?: {
     snapMenuRef: Ref;
