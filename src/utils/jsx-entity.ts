@@ -97,6 +97,7 @@ import { HeightFieldParams, inflateHeightField } from "../inflators/heightfield"
 import { inflateAudioSettings } from "../inflators/audio-settings";
 import { DoorParams, inflateDoor } from "../inflators/door";
 import { inflateQuestion, QuestionParams } from "../inflators/question";
+import { inflateScript, ScriptParams } from "../inflators/script";
 
 preload(
   new Promise(resolve => {
@@ -399,6 +400,7 @@ export interface GLTFComponentData extends ComponentData {
   // DoorParams from door.ts
   door?: DoorParams;
   question?: QuestionParams;
+  script?: ScriptParams;
 }
 
 declare global {
@@ -517,7 +519,8 @@ export const gltfInflators: Required<{ [K in keyof GLTFComponentData]: InflatorF
   // Same name as the (door).ts and the custom component (door).
   // Ties "door" to its inflator
   door: inflateDoor,
-  question: inflateQuestion
+  question: inflateQuestion,
+  script: inflateScript
 };
 
 function jsxInflatorExists(name: string): name is keyof JSXComponentData {

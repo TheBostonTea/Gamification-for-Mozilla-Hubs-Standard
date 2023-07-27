@@ -335,3 +335,8 @@ export const QuestionInterface = defineComponent({
     questionBoxRef: Types.eid//,
     //clearTargetTimer: Types.f64
 });
+
+export const Script = defineComponent({
+  script : Types.ui8
+});
+Script.script[$isStringType] = true;
