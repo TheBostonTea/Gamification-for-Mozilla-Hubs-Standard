@@ -38,7 +38,8 @@ import {
   Billboard,
   MaterialTag,
   VideoTextureSource,
-  Mirror
+  Mirror,
+  QuestionInterface
 } from "../bit-components";
 import { inflateMediaLoader } from "../inflators/media-loader";
 import { inflateMediaFrame } from "../inflators/media-frame";
@@ -96,6 +97,7 @@ import { HeightFieldParams, inflateHeightField } from "../inflators/heightfield"
 import { inflateAudioSettings } from "../inflators/audio-settings";
 import { DoorParams, inflateDoor } from "../inflators/door";
 import { inflateQuestion, QuestionParams } from "../inflators/question";
+import { inflateScript, ScriptParams } from "../inflators/script";
 
 preload(
   new Promise(resolve => {
@@ -348,6 +350,9 @@ export interface JSXComponentData extends ComponentData {
     captureDurLblRef: Ref;
     sndToggleRef: Ref;
   };
+  questionInterface?: {
+    questionBoxRef: Ref;
+  }
   animationMixer?: any;
   mediaLoader?: MediaLoaderParams;
   sceneRoot?: boolean;
@@ -395,6 +400,7 @@ export interface GLTFComponentData extends ComponentData {
   // DoorParams from door.ts
   door?: DoorParams;
   question?: QuestionParams;
+  script?: ScriptParams;
 }
 
 declare global {
@@ -463,6 +469,7 @@ const jsxInflators: Required<{ [K in keyof JSXComponentData]: InflatorFn }> = {
   sceneLoader: createDefaultInflator(SceneLoader),
   networkDebug: createDefaultInflator(NetworkDebug),
   waypointPreview: createDefaultInflator(WaypointPreview),
+  questionInterface:createDefaultInflator(QuestionInterface),
   pdf: inflatePDF,
   mediaLoader: inflateMediaLoader,
 
@@ -512,7 +519,8 @@ export const gltfInflators: Required<{ [K in keyof GLTFComponentData]: InflatorF
   // Same name as the (door).ts and the custom component (door).
   // Ties "door" to its inflator
   door: inflateDoor,
-  question: inflateQuestion
+  question: inflateQuestion,
+  script: inflateScript
 };
 
 function jsxInflatorExists(name: string): name is keyof JSXComponentData {

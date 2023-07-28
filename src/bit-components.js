@@ -328,3 +328,15 @@ export const Question = defineComponent({
   question : Types.ui32
 });
 Question.question[$isStringType] = true;
+
+export const QuestionInterface = defineComponent({
+    //TODO: Remove!
+    targetRef: Types.eid,
+    questionBoxRef: Types.eid//,
+    //clearTargetTimer: Types.f64
+});
+
+export const Script = defineComponent({
+  script : Types.ui8
+});
+Script.script[$isStringType] = true;

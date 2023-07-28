@@ -78,6 +78,8 @@ import { scenePreviewCameraSystem } from "../bit-systems/scene-preview-camera-sy
 import { linearTransformSystem } from "../bit-systems/linear-transform";
 import { doorSystem } from "../bit-systems/door-system";
 import { questionSystem } from "../bit-systems/question-system";
+import { QuestionInterfaceSystem } from "../bit-systems/question-interface-system";
+import { scriptSystem } from "../bit-systems/script-system";
 
 declare global {
   interface Window {
@@ -265,7 +267,9 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
   // Or what the dependencies will be, but here is probably a safe bet.
   // NOTE: Needs to run after interaction systems that set "Interactable".
   doorSystem(world);
+  QuestionInterfaceSystem(world, sceneEl.is("frozen"));
   questionSystem(world);
+  scriptSystem(world);
 
   // All systems that update text properties should run before this
   textSystem(world);
