@@ -1,4 +1,5 @@
 import { defineComponent, setDefaultSize, setRemovedRecycleThreshold, Types } from "bitecs";
+// import { isTypeOfExpression } from "typescript";
 
 // TODO this has to happen before all components are defined. Is there a better spot to be doing this?
 setDefaultSize(10000);
@@ -319,6 +320,7 @@ export const LinearScale = defineComponent({
 // Register "Door", with a ui8 type; the smallest integer
 // available in typescript. Will hold the boolean in the
 // right most bit. 
+//@Deprecated
 export const Door = defineComponent({
   isOpen: Types.ui8
 });
@@ -340,3 +342,14 @@ export const Script = defineComponent({
   script : Types.ui8
 });
 Script.script[$isStringType] = true;
+
+export const Game4dObject = defineComponent({
+  identifier: Types.ui32,
+  flags: Types.ui8,
+  variableName: Types.ui32,
+  variableType: Types.ui8,
+  variableContent: Types.ui32
+});
+Game4dObject.identifier[$isStringType] = true;
+Game4dObject.variableName[$isStringType] = true;
+Game4dObject.variableContent[$isStringType] = true;

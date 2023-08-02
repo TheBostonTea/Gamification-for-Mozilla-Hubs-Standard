@@ -98,6 +98,7 @@ import { inflateAudioSettings } from "../inflators/audio-settings";
 import { DoorParams, inflateDoor } from "../inflators/door";
 import { inflateQuestion, QuestionParams } from "../inflators/question";
 import { inflateScript, ScriptParams } from "../inflators/script";
+import { Game4dObjectParams, inflateGame4dObject } from "../inflators/game4d-object";
 
 preload(
   new Promise(resolve => {
@@ -401,6 +402,7 @@ export interface GLTFComponentData extends ComponentData {
   door?: DoorParams;
   question?: QuestionParams;
   script?: ScriptParams;
+  game4dObject?:Game4dObjectParams;
 }
 
 declare global {
@@ -520,7 +522,8 @@ export const gltfInflators: Required<{ [K in keyof GLTFComponentData]: InflatorF
   // Ties "door" to its inflator
   door: inflateDoor,
   question: inflateQuestion,
-  script: inflateScript
+  script: inflateScript,
+  game4dObject: inflateGame4dObject
 };
 
 function jsxInflatorExists(name: string): name is keyof JSXComponentData {
