@@ -353,3 +353,13 @@ export const Game4dObject = defineComponent({
 Game4dObject.identifier[$isStringType] = true;
 Game4dObject.variableName[$isStringType] = true;
 Game4dObject.variableContent[$isStringType] = true;
+
+export const Game4dOnClick = defineComponent({
+  actionType: Types.ui8,
+  flags: Types.ui8,
+  variableName: Types.ui32,
+  variableType: Types.ui8,
+  variableContent: Types.ui32
+});
+Game4dObject.variableName[$isStringType] = true;
+Game4dObject.variableContent[$isStringType] = true;
