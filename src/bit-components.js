@@ -346,6 +346,7 @@ Script.script[$isStringType] = true;
 export const Game4dObject = defineComponent({
   identifier: Types.ui32,
   flags: Types.ui8,
+  //Support just one Variable at this moment!
   variableName: Types.ui32,
   variableType: Types.ui8,
   variableContent: Types.ui32
@@ -357,6 +358,7 @@ Game4dObject.variableContent[$isStringType] = true;
 export const Game4dOnClick = defineComponent({
   actionType: Types.ui8,
   flags: Types.ui8,
+  //Support just one Variable at this moment!
   variableName: Types.ui32,
   variableType: Types.ui8,
   variableContent: Types.ui32
