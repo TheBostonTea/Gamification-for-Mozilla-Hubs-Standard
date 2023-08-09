@@ -37,8 +37,8 @@ const FunctionsMap = new Map <number, Function> ([
     //[2, game4dCall]
 ]);
 
-const ObjectIdMap = new Map <string, Game4dObjectEntry> ([]);
-const ObjectEidMap = new Map <number, Game4dObjectEntry> ([]);
+const ObjectIdMap = new Map <string, Game4dObject> ([]);
+const ObjectEidMap = new Map <number, Game4dObject> ([]);
 
 // Wanna do this differently...?
 type game4dUNKNOWNVAR = {
@@ -106,22 +106,52 @@ export function game4dRegisterObject(src: string, eid: number): void{
         return;
     }
 
-    const game4dObject = new Game4dObject();
+    const game4dObject = new Game4dObject(src, eid);
 
-    ObjectIdMap.set(src, {name: src, eid: eid, game4dObject: game4dObject} as Game4dObjectEntry);
-    ObjectEidMap.set(eid, {name: src, eid: eid, game4dObject: game4dObject} as Game4dObjectEntry);
+    ObjectIdMap.set(src, game4dObject);
+    // ObjectEidMap.set(eid, {name: src, eid: eid, game4dObject: game4dObject} as Game4dObjectEntry);
+}
+
+export function game4dDeregisterObject(src: string, eid: number): void{
+    if (GAME4DDEBUG) {
+        console.log("Deregistering object %s, eid %d", src, eid);
+    }
+
+    if (!ObjectIdMap.has(src)) {
+        console.error("4dgame object \"%s\" is deregistered again when its identifier already does not exist! ", src);
+    } else {
+        ObjectIdMap.delete(src);
+    }
+
+    if (!ObjectEidMap.has(eid)) {
+        console.error("4dgame object \"%d\" is deregistered again when its eid already does not exist! ", eid);
+    } else {
+        ObjectEidMap.delete(eid);
+    }
 
 }
 
-export function game4dRegisterVar(src: string, name: string, type: number, content: string): number {
-    const entry = ObjectIdMap.get(src);
-    if (typeof entry == "undefined"){
+// function RegisterVariable(obj: Game4dObject, name: string, type: number, content: string): void {
+//     if (typeof obj == "undefined"){
+//         console.error("4dgame object \"%s\" is having a variable registered without being registered itself!");
+//         return;
+//     }
+
+//     obj.addVariable(name, type, content);
+// }
+
+export function game4dRegisterVariables(src: string, variables: string): void {
+    const obj = ObjectIdMap.get(src);
+    if (typeof obj == "undefined"){
         console.error("4dgame object \"%s\" is having a variable registered without being registered itself!");
-        return 1;
+        return;
     }
 
-    entry!.game4dObject.addVariable(name, type, content);
-    return 0;
+    // TODO: Parse the .json!
+    console.log(variables);
+    const variableobj = JSON.parse(variables);
+
+    // entry!.game4dObject.addVariable(name, type, content);
 }
 
 export function game4dRegisterInteraction(src: string, name: string, type: number, content: string): number {
@@ -165,9 +195,15 @@ interface Game4dInterface {
 }
 
 class Game4dObject implements Game4dInterface { 
-
+    identifier: string;
+    eid: number;
     vars: Map<string, Game4dVariable>;
     onClickNode : InteractionNode;
+
+    constructor(identifier: string, eid: number) {
+        this.identifier = identifier;
+        this.eid = eid;
+    }
 
     addVariable (name: string, type: number, content: string) : void {
         this.vars.set(name, (TypesMap.get(type)!)(content));
