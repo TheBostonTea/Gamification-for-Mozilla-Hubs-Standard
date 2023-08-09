@@ -95,7 +95,7 @@ type Game4dObjectEntry = {
 }
 
 
-export function game4dRegisterObject(src: string, eid: number) : number {
+export function game4dRegisterObject(src: string, eid: number): void{
     if (GAME4DDEBUG) {
         console.log("Registering object %s, eid %d", src, eid);
     }
@@ -103,7 +103,7 @@ export function game4dRegisterObject(src: string, eid: number) : number {
     if (ObjectIdMap.has(src) || ObjectEidMap.has(eid)) {
         console.error("4dgame object \"%s\" is registered again when it already exists! "
         + "All behaviours of the duplicate object will be bound to the object with the original id!", src);
-        return 1;
+        return;
     }
 
     const game4dObject = new Game4dObject();
@@ -111,7 +111,6 @@ export function game4dRegisterObject(src: string, eid: number) : number {
     ObjectIdMap.set(src, {name: src, eid: eid, game4dObject: game4dObject} as Game4dObjectEntry);
     ObjectEidMap.set(eid, {name: src, eid: eid, game4dObject: game4dObject} as Game4dObjectEntry);
 
-    return 0;
 }
 
 export function game4dRegisterVar(src: string, name: string, type: number, content: string): number {
