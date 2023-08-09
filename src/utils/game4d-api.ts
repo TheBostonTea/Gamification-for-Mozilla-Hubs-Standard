@@ -5,23 +5,23 @@ import { TypeOperatorNode } from "typescript";
 
 
 // // TODO: Do not store inside component; Map to data to a separate datastructure directly!
-// export const Game4dActionsMap = new Map ([
-//     ['console', 1],
-//     ['ui', 0] //Not yet active!
-// ]);
+export const Game4dActionsMap = new Map ([
+    ['console', 1],
+    ['ui', 0] //Not yet active!
+]);
 
 // Map all possible datatype of variables as integers to be stored inside the component.
 // TODO: Do not store inside component; Map data to a seperate datastructure directly!
-// export const Game4dTypesMap = new Map ([
-//     ['int', 1],
-//     ['float', 2],
-//     ['string', 3],
-//     ['boolean', 4]
-// ]);
+export const Game4dTypesMap = new Map ([
+    ['int', 1],
+    ['float', 2],
+    ['string', 3],
+    ['boolean', 4]
+]);
 
 const GAME4DDEBUG = true;
 
-//TODO: replace with strings for the on-index!
+//TODO: replace with strings!
 const TypesMap  = new Map <number, Function> ([
     [0, Game4dUNKNOWNVAR],
     [1, BigInt],
@@ -30,7 +30,7 @@ const TypesMap  = new Map <number, Function> ([
     [4, Boolean]
 ]);
 
-//TODO: Replace with strings for on-index!
+//TODO: Replace with strings!
 const FunctionsMap = new Map <number, Function> ([
     [0, game4dUNKNOWNACTION],
     [1, game4dConsolelog]//,
@@ -155,7 +155,7 @@ function game4dCall(src: string, target: string, signal: string, ...args: Array<
 }
 
 function HandleInteraction(node: InteractionNode | undefined, ObjectVars: Map<string, Game4dVariable>, ...args: Array<Game4dVariable>) {
-
+    Pass
 }
 
 

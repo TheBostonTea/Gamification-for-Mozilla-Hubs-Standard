@@ -1,4 +1,5 @@
 import { defineComponent, setDefaultSize, setRemovedRecycleThreshold, Types } from "bitecs";
+import { types } from "mediasoup-client";
 // import { isTypeOfExpression } from "typescript";
 
 // TODO this has to happen before all components are defined. Is there a better spot to be doing this?
@@ -320,15 +321,21 @@ export const LinearScale = defineComponent({
 // Register "Door", with a ui8 type; the smallest integer
 // available in typescript. Will hold the boolean in the
 // right most bit. 
-//@Deprecated
+/**
+ * @Deprecated No longer using "doors"!
+ */
 export const Door = defineComponent({
   isOpen: Types.ui8
 });
 
-// Trick needed to make the conversion from string to integer work!
+
+/**
+ * @Deprecated No longer using question objects!
+ */
 export const Question = defineComponent({
   question : Types.ui32
 });
+// Trick needed to make the conversion from string to integer work!
 Question.question[$isStringType] = true;
 
 export const QuestionInterface = defineComponent({
@@ -338,6 +345,9 @@ export const QuestionInterface = defineComponent({
     //clearTargetTimer: Types.f64
 });
 
+/**
+ * @Deprecated No longer using scripts!
+ */
 export const Script = defineComponent({
   script : Types.ui8
 });
@@ -346,22 +356,13 @@ Script.script[$isStringType] = true;
 export const Game4dObject = defineComponent({
   identifier: Types.ui32,
   flags: Types.ui8,
-  //Support just one Variable at this moment!
-  variableName: Types.ui32,
-  variableType: Types.ui8,
-  variableContent: Types.ui32
+  variables: Types.ui32
 });
 Game4dObject.identifier[$isStringType] = true;
-Game4dObject.variableName[$isStringType] = true;
-Game4dObject.variableContent[$isStringType] = true;
+Game4dObject.variables[$isStringType] = true;
 
 export const Game4dOnClick = defineComponent({
-  actionType: Types.ui8,
   flags: Types.ui8,
-  //Support just one Variable at this moment!
-  variableName: Types.ui32,
-  variableType: Types.ui8,
-  variableContent: Types.ui32
+  actions: Types.ui32
 });
-Game4dObject.variableName[$isStringType] = true;
-Game4dObject.variableContent[$isStringType] = true;
+Game4dOnClick.actions[$isStringType] = true;

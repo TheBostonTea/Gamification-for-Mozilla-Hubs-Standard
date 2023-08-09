@@ -8,20 +8,17 @@ export const GAME4DOBJECT_FLAGS = {
     HASVARIABLE: 1 << 1
 }
 
-const Game4dTypes = new Map ([
-    ['string', 1],
-    ['uint', 2],
-    ['sint', 3],
-    ['float', 4]
-]);
+// const Game4dTypes = new Map ([
+//     ['string', 1],
+//     ['uint', 2],
+//     ['sint', 3],
+//     ['float', 4]
+// ]);
 
 export type Game4dObjectParams = {
     identifier: string;
     isActive: boolean,
-    hasVariable: boolean,
-    variableName: string,
-    variableType: string,
-    variableContent: string
+    variables: string
 }
 
 export function inflateGame4dObject( world: HubsWorld, eid: number, params: Game4dObjectParams) {
@@ -29,8 +26,5 @@ export function inflateGame4dObject( world: HubsWorld, eid: number, params: Game
     addComponent(world, Game4dObject, eid);
     Game4dObject.identifier[eid] = APP.getSid(params.identifier);
     params.isActive && (Game4dObject.flags[eid] |= GAME4DOBJECT_FLAGS.ACTIVE);
-    params.hasVariable && (Game4dObject.flags[eid] |= GAME4DOBJECT_FLAGS.HASVARIABLE);
-    Game4dObject.variableName[eid] = APP.getSid(params.variableName);
-    Game4dObject.variableType[eid] = Game4dTypes.get(params.variableType) || 0;
-    Game4dObject.variableContent[eid] = APP.getSid(params.variableContent);
+    Game4dObject.variables[eid] = APP.getSid(params.variables);
 }
