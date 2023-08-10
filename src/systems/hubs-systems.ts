@@ -81,6 +81,7 @@ import { questionSystem } from "../bit-systems/question-system";
 import { QuestionInterfaceSystem } from "../bit-systems/question-interface-system";
 import { scriptSystem } from "../bit-systems/script-system";
 import { game4dObjectSystem } from "../bit-systems/game4d-object-system";
+import { game4dOnClickystem } from "../bit-systems/game4d-onclick-system";
 
 declare global {
   interface Window {
@@ -271,7 +272,10 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
   QuestionInterfaceSystem(world, sceneEl.is("frozen"));
   questionSystem(world);
   scriptSystem(world);
+
+  //Game4d Systems here!
   game4dObjectSystem(world);
+  game4dOnClickystem(world);
 
   // All systems that update text properties should run before this
   textSystem(world);
