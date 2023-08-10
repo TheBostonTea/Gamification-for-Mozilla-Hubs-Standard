@@ -22,12 +22,12 @@ export const Game4dTypesMap = new Map ([
 const GAME4DDEBUG = true;
 
 //TODO: replace with strings!
-const TypesMap  = new Map <number, Function> ([
-    [0, Game4dUNKNOWNVAR],
-    [1, BigInt],
-    [2, Number],
-    [3, String],
-    [4, Boolean]
+const TypesMap  = new Map <string, Function> ([
+    ["", Game4dUNKNOWNVAR],
+    ["int", BigInt],
+    ["float", Number],
+    ["string", String],
+    ["boolean", Boolean]
 ]);
 
 //TODO: Replace with strings!
@@ -88,12 +88,6 @@ type InteractionNode = {
     //Maybe it's own variable map?
 }
 
-type Game4dObjectEntry = {
-    name: string,
-    eid: number,
-    game4dObject: Game4dObject
-}
-
 
 export function game4dRegisterObject(src: string, eid: number): void{
     if (GAME4DDEBUG) {
@@ -101,7 +95,7 @@ export function game4dRegisterObject(src: string, eid: number): void{
     }
 
     if (ObjectIdMap.has(src) || ObjectEidMap.has(eid)) {
-        console.error("4dgame object \"%s\" is registered again when it already exists! "
+        console.warn("4dgame object \"%s\" is registered again when it already exists! "
         + "All behaviours of the duplicate object will be bound to the object with the original id!", src);
         return;
     }
@@ -150,6 +144,14 @@ export function game4dRegisterVariables(src: string, variables: string): void {
     // TODO: Parse the .json!
     console.log(variables);
     const variableobj = JSON.parse(variables);
+    for (var i in variableobj) {
+        console.log(variableobj[i]);
+        console.log(variableobj[i]["name"]);
+        console.log(variableobj[i].name);
+        console.log(variableobj[i]["type"]);
+        console.log(variableobj[i]["content"]);
+        obj.addVariable(variableobj[i]["name"], variableobj[i]["type"], variableobj[i]["content"]);
+    }
 
     // entry!.game4dObject.addVariable(name, type, content);
 }
@@ -203,10 +205,16 @@ class Game4dObject implements Game4dInterface {
     constructor(identifier: string, eid: number) {
         this.identifier = identifier;
         this.eid = eid;
+        this.vars = new Map<string, Game4dVariable>
     }
 
-    addVariable (name: string, type: number, content: string) : void {
+    addVariable (name: string, type: string, content: string) : void {
+        if (this.vars.has(name)) {
+            console.warn("Variable %s is registered to Game4d Object %s when it is already registered! Ignoring...", name, this.identifier);
+            return
+        }
         this.vars.set(name, (TypesMap.get(type)!)(content));
+        console.log(typeof this.vars.get(name), this.vars.get(name))
     }
 
     // Generic JSON unpacking here...
