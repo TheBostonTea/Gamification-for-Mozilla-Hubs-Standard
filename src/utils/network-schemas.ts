@@ -2,6 +2,7 @@ import { Component } from "bitecs";
 import { HubsWorld } from "../app";
 import {
   $isStringType,
+  NetworkedDoor,
   NetworkedFloatyObject,
   NetworkedMediaFrame,
   NetworkedPDF,
@@ -16,6 +17,7 @@ import { NetworkedTransformSchema } from "./networked-transform-schema";
 import { NetworkedVideoSchema } from "./networked-video-schema";
 import { NetworkedWaypointSchema } from "./networked-waypoint-schema";
 import type { CursorBuffer, EntityID } from "./networking-types";
+import { NetworkedDoorSchema } from "./networked-door-schema";
 
 export interface StoredComponent {
   version: number;
@@ -46,6 +48,7 @@ schemas.set(NetworkedFloatyObject, {
   ...defineNetworkSchema(NetworkedFloatyObject)
 });
 schemas.set(NetworkedPDF, NetworkedPDFSchema);
+schemas.set(NetworkedDoor, NetworkedDoorSchema);
 
 export const networkableComponents = Array.from(schemas.keys());
 

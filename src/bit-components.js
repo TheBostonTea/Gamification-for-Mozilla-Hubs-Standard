@@ -328,6 +328,13 @@ export const Door = defineComponent({
   isOpen: Types.ui8
 });
 
+/**
+ * @Deprecated No longer using "doors"!
+ */
+export const NetworkedDoor = defineComponent({
+  isOpen: Types.ui8
+});
+
 
 /**
  * @Deprecated No longer using question objects!

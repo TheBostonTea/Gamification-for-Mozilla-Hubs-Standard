@@ -1,7 +1,8 @@
 import { defineQuery, enterQuery, exitQuery, hasComponent } from "bitecs";
-import { Door, Interacted } from "../bit-components";
+import { Door, Interacted, NetworkedDoor } from "../bit-components";
 import { HubsWorld } from "../app";
 import { findAncestor } from "../utils/three-utils";
+import { takeOwnership } from "../utils/take-ownership";
 
 // Function to check if the door has an "Interacted" component. Why not just put this in the code itself? I dunno.
 // It is more readable and documentable.
@@ -54,7 +55,18 @@ export function doorSystem(world: HubsWorld) {
         if (clicked(eid)){
             console.log("The door %d was clicked!", eid);
 
-            Door.isOpen[eid] = Door.isOpen[eid] ? 0 : 1;
+            takeOwnership(world, eid);
+            console.log("Door state old: %d", NetworkedDoor.isOpen[eid]);
+
+            NetworkedDoor.isOpen[eid] = (NetworkedDoor.isOpen[eid] == 1) ? 0 : 1;
+            console.log("Door state new: %d", NetworkedDoor.isOpen[eid]);
+
+
+        }
+
+        if (Door.isOpen[eid] != NetworkedDoor.isOpen[eid]){
+            console.log("Door State was updated!");
+            Door.isOpen[eid] = NetworkedDoor.isOpen[eid];
             if (Door.isOpen[eid] == 1) {
                 console.log("Door is opening");
                 action.setEffectiveTimeScale(1);
