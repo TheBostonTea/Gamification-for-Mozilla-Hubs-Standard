@@ -2,6 +2,7 @@
 
 import { Pass } from "postprocessing";
 import { TypeOperatorNode } from "typescript";
+import { ValidUrl } from "../react-components/room/SceneUrlModal.stories";
 
 
 // // TODO: Do not store inside component; Map to data to a separate datastructure directly!
@@ -260,7 +261,81 @@ function HandleInteraction(inode: InteractionNode | undefined, ObjectVars: Map<s
 
 interface Game4dInterface {
     onClick : () => void,
+}
 
+type Game4dContext = {};
+
+function formatContext(context: Game4dContext): string {
+    return "";
+}
+
+// Rewrite the code to use inheritance and codes to create unique nodes, to clean up the code!
+class Node4D {
+    next: Node4D | undefined;
+    
+    constructor() {
+        this.next = undefined;
+    }
+
+    setNext(next: Node4D) :void {
+        this.next = next;
+    }
+
+    execute(context: Game4dContext, eid: number) : Game4dContext {
+        if (this.next) {
+            return this.next?.execute(context, eid)
+        }
+        return context;
+    }
+}
+
+class Node4DUndefined extends Node4D {
+
+    constructor() {
+        super()
+    }
+
+    execute(context: Game4dContext, eid: number) : Game4dContext {
+        console.error("Error: Undefined node called from eid %d, with context %s", eid, formatContext(context));
+        return super.execute(context, eid);
+    }
+}
+
+class Node4DLogic extends Node4D {
+    child: Node4D | undefined;
+
+    constructor() {
+        super()
+        this.child = undefined;
+    }
+
+    setChild(child: Node4D) {
+        this.child = child;
+    }
+
+    execute(context: Game4dContext, eid: number) : Game4dContext {
+        if (this.child) {
+            context = this.child.execute(context, eid);
+        }
+
+        return super.execute(context, eid);
+    }
+}
+
+class Node4DDebug extends Node4D {
+    debugMessage: string;
+    variables: Array<string>; //TODO: Add variable pointers!
+
+    constructor(debugMessage: string, variables: Array<string>) {
+        super();
+        this.debugMessage = debugMessage;
+        this.variables = variables;
+    }
+
+    execute(context: Game4dContext, eid: number) : Game4dContext {
+        console.log(this.debugMessage, this.variables);
+        return super.execute(context, eid);
+    }
 }
 
 class Game4dObject implements Game4dInterface { 
