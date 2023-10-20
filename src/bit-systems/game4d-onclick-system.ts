@@ -46,14 +46,9 @@ export function game4dOnClickystem(world: HubsWorld) {
     game4dOnClickQuery(world).forEach(function (eid) {
         
         // // If the script object was clicked, Do this!
-        // if (clicked(eid)){
-        //     console.log("Clicked!")
-        //     let id = game4dGetIDFromEID(eid);
-        //     if (typeof id != "undefined") {
-        //         game4dOnClick(id, eid);
-        //     } else {
-        //         console.error("ERROR: No Game4d Object found for Eid %d", eid);
-        //     }
-        // }
+        if (clicked(eid)){
+            console.log("Clicked!")
+            G4D.callRoutine(Game4dOnClick.actions[eid]);
+        }
     });
 }

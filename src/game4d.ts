@@ -16,14 +16,16 @@ export const Game4dTypesMap = new Map ([
     ['boolean', 4]
 ]);
 
-interface VariableFormat {
+export interface VariableFormat {
     name: string;
     type: string;
     content: string;
 };
 
-interface RoutineFormat {
-
+export interface RoutineFormat {
+    function: string;
+    args: string;
+    children: Array<RoutineFormat> | undefined;
 };
 
 function get_val(type: string, content:string) : G4Dvar {
@@ -32,6 +34,14 @@ function get_val(type: string, content:string) : G4Dvar {
             return Number(content);
 
         case 'float':
+// type G4Dstring = {
+//     name: string;
+//     val: string;
+// }
+
+// type G4Dnum = {
+//     name: string;
+// }
             return Number(content);
 
         case 'string':
@@ -80,12 +90,12 @@ export class Game4DSystem {
     }
 
     registerRoutine(jsonstr: string): number {
-        const jsonobj/*: Array<RoutineFormat> */= JSON.parse(jsonstr);
+        const jsonobj: Array<RoutineFormat> = JSON.parse(jsonstr);
         let routine = new G4Droutine(/** Parse stuff here... */);
 
-        // jsonobj.forEach(n => {
-        //     /* Do stuff... */
-        // });
+        jsonobj.forEach(n => {
+            routine.AddNode(n["function"], n["args"], n["children"]);
+        });
 
         let routineid = this.routineid++;
         this.routineMap.set(routineid, routine);
@@ -93,7 +103,12 @@ export class Game4DSystem {
     }
 
     callRoutine(gid: number) {
-
+        let routine = this.routineMap.get(gid);
+        if(routine) {
+            routine.call();
+        } else {
+            console.error("Routine with " + gid + " not found!");
+        }
         // return undefined;
     }
 
