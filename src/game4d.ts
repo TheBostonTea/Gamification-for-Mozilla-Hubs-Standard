@@ -1,5 +1,5 @@
 import { ElOrEid } from "./utils/bit-utils";
-import { G4Droutine, G4Dvar, G4DUNKNOWNVAR } from "./utils/game4d-utils";
+import { G4Droutine, G4Dvartype, G4DUNKNOWNVAR } from "./utils/game4d-utils";
 
 declare global {
   interface Window {
@@ -28,7 +28,7 @@ export interface RoutineFormat {
     children: Array<RoutineFormat> | undefined;
 };
 
-function get_val(type: string, content:string) : G4Dvar {
+function get_val(type: string, content:string) : G4Dvartype {
     switch (type) {
         case 'int':
             return Number(content);
@@ -57,17 +57,20 @@ function get_val(type: string, content:string) : G4Dvar {
 
 export class Game4DSystem {
 
-    varMap : Map<number, Map<string, G4Dvar>>;
+    varMap : Map<number, Map<string, G4Dvartype>>;
     routineMap : Map<number, G4Droutine | null>;
     objectMap = new Map<string, ElOrEid>();
+
+    global : Map<string, G4Dvartype>;
 
     varid : number;
     routineid: number;
 
     constructor(/*Might want to put a global script here later */) {
         // Reserve 0 for global routines; Any global scope variables/routines are called first before searching...
-        this.varMap = new Map([[0, new Map<string, G4Dvar>]]);
+        this.varMap = new Map([[0, new Map<string, G4Dvartype>]]);
         this.routineMap = new Map([[0, new G4Droutine]]);
+        this.global = this.varMap.get(0)!;
 
         this.varid = 1;
         this.routineid = 1;
@@ -77,7 +80,7 @@ export class Game4DSystem {
 
     registerVars(jsonstr: string) : number {
         const jsonobj: Array<VariableFormat> = JSON.parse(jsonstr);
-        let vars = new Map<string, G4Dvar>();
+        let vars = new Map<string, G4Dvartype>();
 
         jsonobj.forEach(v => {
             vars.set(v["name"], get_val(v["type"], v["content"]));
@@ -102,25 +105,36 @@ export class Game4DSystem {
         return routineid;
     }
 
-    callRoutine(gid: number) {
+    callRoutine(gid: number, oid: number) {
         let routine = this.routineMap.get(gid);
         if(routine) {
-            routine.call();
+            routine.call(oid);
         } else {
             console.error("Routine with " + gid + " not found!");
         }
         // return undefined;
     }
 
-    getVar(gid: number, name: string) : G4Dvar {
-
-        return {debug_info: `GETVAR NULLRET; GID:${gid} NAME:${name}`} as G4DUNKNOWNVAR;
+    getVar(vid: number, name: string) : G4Dvartype {
+        let m : Map<string, G4Dvartype> | undefined = this.varMap.get(vid);
+        
+        // if(m){
+        //     co
+        // }
+        console.log(this.global.get(name));
+        if(m && m.get(name)) {
+            return m.get(name)!;
+        } else if(this.global.get(name)) {
+            return this.global.get(name)!;
+        }
+        console.error("Error, no variable found for vid: " + vid + ", name: " + name);
+        return {debug_info: `GETVAR NULLRET; GID:${vid} NAME:${name}`} as G4DUNKNOWNVAR;
     }
 
     dbg_listVars(gid: number) : void {
-        let vars : Map<string, G4Dvar> | undefined = this.varMap.get(gid);
+        let vars : Map<string, G4Dvartype> | undefined = this.varMap.get(gid);
         if (vars != undefined) {
-            vars.forEach((value: G4Dvar, key: string) => {
+            vars.forEach((value: G4Dvartype, key: string) => {
                 console.log("key: \"" + key + "\"\n val: " + value);                
             });
         } else {

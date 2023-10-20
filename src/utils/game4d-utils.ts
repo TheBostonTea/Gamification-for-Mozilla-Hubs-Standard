@@ -1,7 +1,7 @@
 import { string } from "prop-types";
 import { RoutineFormat } from "../game4d";
 
-export type G4Dvar = number | boolean | string | G4DUNKNOWNVAR;
+export type G4Dvartype = number | boolean | string | G4DUNKNOWNVAR;
 
 export type G4DUNKNOWNVAR = {
     debug_info: string,
@@ -9,23 +9,37 @@ export type G4DUNKNOWNVAR = {
 
 export type G4DNode = {
     action: Function,
-    argument: G4DVarRef,
+    argument: G4DVar,
     next: G4DNode | undefined;
 };
 
 //TODO: Actual references to variables, setting of arguments...
 //TODO: "Entrypoint" variables
+export type G4DVar = G4DVarLiteral | G4DVarRef;
+
+export type G4DVarLiteral = {
+    content: G4Dvartype;
+    type: string;
+}
+
 export type G4DVarRef = {
-    content: G4Dvar;
-    type: string
+    name: string;
 }
+const isVarRef = (v: G4DVar) : v is G4DVarRef => (v as G4DVarRef).name !== undefined;
 
-function fetchArgument(arg: string): G4DVarRef {
-    return {content: arg, type: "string"} as G4DVarRef
+function fetchArgument(arg: string): G4DVar {
+    if (arg.charAt(0) === "@") {
+        console.log("Found reference: " + arg);
+        // Do not resolve the variable reference! There is no guarantee that the parent is inflated!
+        return {name: arg.substring(1)} as G4DVarRef;
+
+    } else if(arg.charAt(0) === "_") {
+        return {content: arg.substring(1), type: "string"} as G4DVarLiteral;
+    } else {
+        console.error("Malformed argument name or content: " + arg);
+        return {content: "ERROR: " + arg, type: "string"} as G4DVarLiteral;
+    }
 }
-
-
-
 
 // Actions through the api are defined here:string
 function G4DUNKNOWNACTION(...args: Array<string | number | boolean>) {
@@ -73,12 +87,17 @@ export class G4Droutine {
         }
     }
 
-    call(/*supplied variables?*/) : void {
+    call(vid: number/*supplied variables?*/) : void {
 
         let curr: G4DNode | undefined = this.head;
 
         while(curr){
-            curr.action(curr.argument.content);
+            if (isVarRef(curr.argument)){
+                curr.action(G4D.getVar(vid, curr.argument.name));
+            } else {
+                curr.action(curr.argument.content);
+
+            }
             curr = curr.next;
         }
 

@@ -1,5 +1,5 @@
 import { defineQuery, enterQuery, exitQuery, hasComponent } from "bitecs";
-import { Game4dOnClick, Interacted } from "../bit-components";
+import { Game4dObject, Game4dOnClick, Interacted } from "../bit-components";
 import { HubsWorld } from "../app";
 import { game4dRegisterObject , game4dDeregisterObject, game4dRegisterVariables, game4dGetIDFromEID, game4dRegisterOnClick, game4dOnClick} from "../utils/game4d-api";
 import { GAME4DONCLICK_FLAGS } from "../inflators/game4d-onclick";
@@ -48,7 +48,7 @@ export function game4dOnClickystem(world: HubsWorld) {
         // // If the script object was clicked, Do this!
         if (clicked(eid)){
             console.log("Clicked!")
-            G4D.callRoutine(Game4dOnClick.actions[eid]);
+            G4D.callRoutine(Game4dOnClick.actions[eid], Game4dObject.variables[eid]);
         }
     });
 }
