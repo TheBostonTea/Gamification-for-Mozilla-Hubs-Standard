@@ -22,19 +22,20 @@ function clicked(eid: number) {
 export function game4dOnClickystem(world: HubsWorld) {
 
     game4dOnClickEnterQuery(world).forEach(function (eid) {
-        console.log("Register On-Click");
-        let id = game4dGetIDFromEID(eid);
+        // G4D.dbg_listVars(G)
+        // console.log("Register On-Click");
+        // let id = game4dGetIDFromEID(eid);
     
-        if (typeof id != "undefined") {
-            let actions = "";
-            let actionstr = APP.getString(Game4dOnClick.actions[eid]);
-            if(actionstr != null && typeof actionstr != "undefined") {
-                actions = actionstr;
-            }
-            game4dRegisterOnClick(id, eid, isActive(eid), actions);
-        } else {
-            console.error("ERROR: No Game4d Object found for Eid %d", eid);
-        }
+        // if (typeof id != "undefined") {
+        //     let actions = "";
+        //     let actionstr = APP.getString(Game4dOnClick.actions[eid]);
+        //     if(actionstr != null && typeof actionstr != "undefined") {
+        //         actions = actionstr;
+        //     }
+        //     game4dRegisterOnClick(id, eid, isActive(eid), actions);
+        // } else {
+        //     console.error("ERROR: No Game4d Object found for Eid %d", eid);
+        // }
     });
 
     // game4dOnClickExitQuery(world).forEach( function (eid) {
@@ -44,15 +45,15 @@ export function game4dOnClickystem(world: HubsWorld) {
 
     game4dOnClickQuery(world).forEach(function (eid) {
         
-        // If the script object was clicked, Do this!
-        if (clicked(eid)){
-            console.log("Clicked!")
-            let id = game4dGetIDFromEID(eid);
-            if (typeof id != "undefined") {
-                game4dOnClick(id, eid);
-            } else {
-                console.error("ERROR: No Game4d Object found for Eid %d", eid);
-            }
-        }
+        // // If the script object was clicked, Do this!
+        // if (clicked(eid)){
+        //     console.log("Clicked!")
+        //     let id = game4dGetIDFromEID(eid);
+        //     if (typeof id != "undefined") {
+        //         game4dOnClick(id, eid);
+        //     } else {
+        //         console.error("ERROR: No Game4d Object found for Eid %d", eid);
+        //     }
+        // }
     });
 }

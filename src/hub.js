@@ -1435,3 +1435,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   authChannel.setSocket(socket);
   linkChannel.setSocket(socket);
 });
+
+import { Game4DSystem } from "./game4d";
+
+window.G4D = new Game4DSystem();

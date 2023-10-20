@@ -19,33 +19,33 @@ function isActive(eid: number) : boolean {
 export function game4dObjectSystem(world: HubsWorld) {
 
     game4dObjectEnterQuery(world).forEach(function (eid) {
-        let id = APP.getString(Game4dObject.identifier[eid])
+        G4D.dbg_listVars(Game4dObject.variables[eid]);
 
-        if (id != null && id != undefined) {
-            game4dRegisterObject(id, eid, isActive(eid));
-        } else {
-            console.error("Game4d Object %d has no string attached to its identifier!");
-        }
+        // if (id != null && id != undefined) {
+        //     game4dRegisterObject(id, eid, isActive(eid));
+        // } else {
+        //     console.error("Game4d Object %d has no string attached to its identifier!");
+        // }
 
-        let variables = APP.getString(Game4dObject.variables[eid])
+        // let variables = APP.getString(Game4dObject.variables[eid])
 
-        if (variables != null && id != undefined) {
-            game4dRegisterVariables(id, variables);
-        } else {
-            console.warn("Object %s has no variables! Might be expected behavior, but this is worth checking!", id);
-        }
+        // if (variables != null && id != undefined) {
+        //     game4dRegisterVariables(id, variables);
+        // } else {
+        //     console.warn("Object %s has no variables! Might be expected behavior, but this is worth checking!", id);
+        // }
 
     });
 
     game4dObjectExitQuery(world).forEach( function (eid) {
-        console.log("Deregistering Game4d Object %d with name %s", eid, APP.getString(Game4dObject.identifier[eid]));
-        let id: string = APP.getString(Game4dObject.identifier[eid])!
+        // console.log("Deregistering Game4d Object %d with name %s", eid, APP.getString(Game4dObject.identifier[eid]));
+        // let id: string = APP.getString(Game4dObject.identifier[eid])!
 
-        if (id != null && id != undefined) {
-            game4dDeregisterObject(id, eid)
-        } else {
-            console.error("Game4d Object %d has no string attached to its identifier!");
-        }
+        // if (id != null && id != undefined) {
+        //     game4dDeregisterObject(id, eid)
+        // } else {
+        //     console.error("Game4d Object %d has no string attached to its identifier!");
+        // }
 
     });
 }

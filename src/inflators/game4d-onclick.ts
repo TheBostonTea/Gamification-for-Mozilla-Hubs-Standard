@@ -17,7 +17,7 @@ export function inflateGame4dOnClick( world: HubsWorld, eid: number, params: Gam
     console.log("Inflate Game4dOnClick %d", eid);
     addComponent(world, Game4dOnClick, eid);
     params.isActive && (Game4dOnClick.flags[eid] |= GAME4DONCLICK_FLAGS.ACTIVE);
-    Game4dOnClick.actions[eid] = APP.getSid(params.actions);
+    Game4dOnClick.actions[eid] = G4D.registerRoutine(params.actions);
 
     addComponent(world, RemoteHoverTarget, eid);
     addComponent(world, CursorRaycastable, eid);
