@@ -49,6 +49,7 @@ export function game4dOnClickystem(world: HubsWorld) {
         if (clicked(eid)){
             console.log("Clicked!")
             G4D.callRoutine(Game4dOnClick.actions[eid], Game4dObject.variables[eid]);
+            console.log(Game4dOnClick.actions[eid]);
         }
     });
 }

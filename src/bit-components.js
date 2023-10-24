@@ -325,15 +325,19 @@ export const LinearScale = defineComponent({
  * @Deprecated No longer using "doors"!
  */
 export const Door = defineComponent({
-  isOpen: Types.ui8
+  isOpen: Types.ui8,
+  testString: Types.ui32
 });
+Door.testString[$isStringType] = true;
 
 /**
  * @Deprecated No longer using "doors"!
  */
 export const NetworkedDoor = defineComponent({
-  isOpen: Types.ui8
+  isOpen: Types.ui8,
+  testString: Types.ui32
 });
+NetworkedDoor.testString[$isStringType] = true;
 
 
 /**

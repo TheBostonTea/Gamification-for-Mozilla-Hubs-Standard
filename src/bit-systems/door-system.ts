@@ -52,7 +52,13 @@ export function doorSystem(world: HubsWorld) {
         // If the door was clicked, Do this!
         const {mixer, action} = state.get(eid);
 
+                    // Update the networked door string only when clicking to save on loops
+        if (NetworkedDoor.testString[eid] != Door.testString[eid]) {
+            Door.testString[eid] = NetworkedDoor.testString[eid];
+        }
+
         if (clicked(eid)){
+
             console.log("The door %d was clicked!", eid);
 
             takeOwnership(world, eid);
@@ -61,7 +67,12 @@ export function doorSystem(world: HubsWorld) {
             NetworkedDoor.isOpen[eid] = (NetworkedDoor.isOpen[eid] == 1) ? 0 : 1;
             console.log("Door state new: %d", NetworkedDoor.isOpen[eid]);
 
+            let str = APP.getString(Door.testString[eid])!;
+            str = str + "a";
 
+            Door.testString[eid] = APP.getSid(str);
+            NetworkedDoor.testString[eid] = Door.testString[eid];
+            
         }
 
         if (Door.isOpen[eid] != NetworkedDoor.isOpen[eid]){
@@ -76,6 +87,7 @@ export function doorSystem(world: HubsWorld) {
             }
             action.paused = false;
             action.play();
+            console.log(APP.getString(Door.testString[eid])!);
         }
 
         // TODO: Magic Number! Very unneat!

@@ -8,8 +8,9 @@ const migrations = new Map<number, Migration>();
 function apply(eid: EntityID, { version, data }: StoredComponent) {
   if (version !== 1) return false;
 
-  const { isOpen }: { isOpen: number } = data;
+  const { isOpen, testString }: { isOpen: number, testString: string } = data;
   write(NetworkedDoor.isOpen, eid, isOpen);
+  write(NetworkedDoor.testString, eid, APP.getString(NetworkedDoor.testString[eid]));
   return true;
 }
 
@@ -22,7 +23,8 @@ export const NetworkedDoorSchema: NetworkSchema = {
     return {
       version: 1,
       data: {
-        isOpen: read(NetworkedDoor.isOpen, eid)
+        isOpen: read(NetworkedDoor.isOpen, eid),
+        testString: APP.getSid(read(NetworkedDoor.testString, eid))
       }
     };
   },

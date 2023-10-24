@@ -35,6 +35,9 @@ export function inflateDoor( world: HubsWorld, eid: number, params: DoorParams){
     params.isOpen && (Door.isOpen[eid] |= DOOR_FLAGS.OPEN);
     params.isOpen && (NetworkedDoor.isOpen[eid] |= DOOR_FLAGS.OPEN);
 
+    Door.testString[eid] = APP.getSid("a");
+    NetworkedDoor.testString[eid] = Door.testString[eid];
+
     // Add components to this door so that it is clickable; 
     //      RemoteHoverTarget: What am I hovering over with the selector
     //      CursosRaycastable: Am I collidable with the selector ray? (Also used for walls to block selectors!)

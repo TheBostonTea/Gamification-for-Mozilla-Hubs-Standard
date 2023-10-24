@@ -26,5 +26,5 @@ export function inflateGame4dObject( world: HubsWorld, eid: number, params: Game
     addComponent(world, Game4dObject, eid);
     Game4dObject.identifier[eid] = APP.getSid(params.identifier);
     params.isActive && (Game4dObject.flags[eid] |= GAME4DOBJECT_FLAGS.ACTIVE);
-    Game4dObject.variables[eid] = G4D.registerVars(params.variables)
+    Game4dObject.variables[eid] = G4D.registerVars(eid, params.variables)
 }
