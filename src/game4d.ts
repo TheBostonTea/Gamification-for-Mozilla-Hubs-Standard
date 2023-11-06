@@ -15,11 +15,21 @@ export interface VariableFormat {
     content: string;
 };
 
+export interface UpdateFormat {
+    name: string;
+    value: string;
+};
+
+
 export interface RoutineFormat {
     function: string;
     args: Array<string>;
     children: Array<RoutineFormat> | undefined;
 };
+
+export interface UpdatesFormat {
+    vars: Array<UpdateFormat>
+}
 
 function get_val(type: string, content:string) : G4DType {
     switch (type) {
@@ -43,8 +53,7 @@ function get_val(type: string, content:string) : G4DType {
 export class G4DSyncMemory extends G4DMemory {
     updateId : number = 0;
     locked: boolean = false;
-    updateQueue: Array<string> = [];
-    synchronizeQueue : Array<string> = [];
+    updateQueue: Array<VariableFormat> = [];
     toUpdate: boolean = false;
     //TODO: construct!
 
@@ -56,16 +65,43 @@ export class G4DSyncMemory extends G4DMemory {
         // Currently, memory is never locked.
         if(!this.locked) {
             super.updateVal(key, value);
+            this.toUpdate = true;
+            this.updateQueue.push({name : key, type : G4DGetType(value), content : value} as VariableFormat);
         } else {
             console.warn(`Variable ${key} cannot be updated! Memory is locked!...`);
-            this.updateQueue.push(`{${key} , ${value}}`);
         }
     }
 
-    pushUpdates() : number {
-        this.updateId++;
+    fetchUpdates() : string{
+        if(this.toUpdate && this.updateQueue.length > 0) {
+            this.updateId++;
+            let updatestr = JSON.stringify(this.updateQueue);
+            this.updateQueue = [];
+            return updatestr
+        } else {
+            return "";
+        }
+    }
+
+    hasUpdates() : boolean {
+        return this.toUpdate;
+    }
+
+    getVarid() {
         return this.updateId;
     }
+
+    pushUpdates(updatestr: string, updateId: number) : void {
+        console.log("Push me, and then just touch me, till blablabla " + updatestr);
+        this.updateId = updateId;
+        const update: Array<VariableFormat> = JSON.parse(updatestr);
+
+        update.forEach(u => {
+            console.log(`${u['name']}, ${u['type']}, ${u['content']}`);
+            this.mem.set(u["name"], get_val(u["type"], u["content"]));
+        });
+    }
+
 }
 
 export class Game4DSystem {
@@ -75,9 +111,10 @@ export class Game4DSystem {
     routineMap : Map<number, G4Droutine | null>;
     // Need this for calling objects with name.
     objectMap = new Map<string, ElOrEid>();
+    // updateQueue = new Array<string>();
+
     
     behaviorQueue : Array<string> = [];
-    variableQueue : Array<string> = [];
 
     global : G4DSyncMemory;
 
@@ -156,6 +193,40 @@ export class Game4DSystem {
         return {debug_info: `GETVAR NULLRET; GID:${eid} NAME:${name}`} as G4DUNKNOWNVAR;
     }
 
+    fetchUpdates(eid: number) : number | undefined{
+        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+
+        if (m !== undefined) {
+            let updates = m.fetchUpdates();
+            if(updates !== undefined) {
+                return APP.getSid(updates);
+            } 
+        }
+        
+        return APP.getSid("");
+    }
+
+    hasUpdates(eid: number) : boolean {
+        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+
+        if (m !== undefined) {
+            console.log("Exists!");
+            return m.hasUpdates();
+        }
+        
+        return false;
+    }
+
+    getVarid(eid:number) : number | undefined{
+        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+
+        if (m !== undefined) {
+            return m.getVarid();
+        }
+        
+        return undefined;
+    }
+
     findRef(eid: number, name: string) : G4DVar {
         let m : G4DSyncMemory | undefined = this.varMap.get(eid);
         // console.warn(name, eid, m!.get(name));
@@ -168,6 +239,17 @@ export class Game4DSystem {
             return {name: name, eid:eid} as G4DNOREF;
         }
     
+    }
+
+    synchronize(eid: number, uid: number, varid: number) : void {
+        let mem : G4DSyncMemory | undefined = this.varMap.get(eid);
+        let update : string = APP.getString(uid)!;
+
+        if(mem !== undefined) {
+            mem.pushUpdates(update, varid);
+        } else {
+            console.warn(`Warning, no memory found for ${eid}!`);
+        }
     }
 
     dbg_listVars(eid: number) : void {

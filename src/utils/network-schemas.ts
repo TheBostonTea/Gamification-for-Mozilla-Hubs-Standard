@@ -4,6 +4,7 @@ import {
   $isStringType,
   NetworkedDoor,
   NetworkedFloatyObject,
+  NetworkedGame4dobject,
   NetworkedMediaFrame,
   NetworkedPDF,
   NetworkedTransform,
@@ -18,6 +19,7 @@ import { NetworkedVideoSchema } from "./networked-video-schema";
 import { NetworkedWaypointSchema } from "./networked-waypoint-schema";
 import type { CursorBuffer, EntityID } from "./networking-types";
 import { NetworkedDoorSchema } from "./networked-door-schema";
+import { NetworkedG4DObjectSchema } from "./networked-game4dobject";
 
 export interface StoredComponent {
   version: number;
@@ -49,6 +51,7 @@ schemas.set(NetworkedFloatyObject, {
 });
 schemas.set(NetworkedPDF, NetworkedPDFSchema);
 schemas.set(NetworkedDoor, NetworkedDoorSchema);
+schemas.set(NetworkedGame4dobject, NetworkedG4DObjectSchema);
 
 export const networkableComponents = Array.from(schemas.keys());
 

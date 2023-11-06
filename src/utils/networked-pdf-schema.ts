@@ -10,6 +10,7 @@ function apply(eid: EntityID, { version, data }: StoredComponent) {
 
   const { pageNumber }: { pageNumber: number } = data;
   write(NetworkedPDF.pageNumber, eid, pageNumber);
+  console.log("New page!");
   return true;
 }
 

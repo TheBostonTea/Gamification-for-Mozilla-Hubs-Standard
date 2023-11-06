@@ -98,7 +98,7 @@ import { inflateAudioSettings } from "../inflators/audio-settings";
 import { DoorParams, inflateDoor } from "../inflators/door";
 import { inflateQuestion, QuestionParams } from "../inflators/question";
 import { inflateScript, ScriptParams } from "../inflators/script";
-import { G4DObjectParams, inflateG4DObject } from "../inflators/g4d-object";
+import { G4DObjectParams, inflateG4DObject } from "../inflators/game4d-object";
 import { Game4dOnClickParams, inflateGame4dOnClick } from "../inflators/game4d-onclick";
 
 preload(

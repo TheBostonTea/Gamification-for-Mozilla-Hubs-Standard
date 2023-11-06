@@ -364,19 +364,15 @@ export const Script = defineComponent({
 });
 Script.script[$isStringType] = true;
 
-export const G4DObject = defineComponent({
-  identifier: Types.ui32,
-  flags: Types.ui8, //TODO: deprecate!
-  varid: Types.ui32
+export const Game4dobject = defineComponent({
+  varid: Types.ui8,
 });
-G4DObject.identifier[$isStringType] = true;
 
-export const NetworkedG4DObject = defineComponent({
-  identifier: Types.ui32,
-  flags: Types.ui8, //TODO: deprecate!
-  varid: Types.ui32
+export const NetworkedGame4dobject = defineComponent({
+  varid: Types.ui8,
+  updates: Types.ui32
 });
-NetworkedG4DObject.identifier[$isStringType] = true;
+NetworkedGame4dobject.updates[$isStringType] = true;
 
 export const Game4dOnClick = defineComponent({
   flags: Types.ui8,
