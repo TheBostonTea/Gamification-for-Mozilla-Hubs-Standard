@@ -1,5 +1,5 @@
 import { ElOrEid } from "./utils/bit-utils";
-import { G4Droutine, G4DVarType, G4DUNKNOWNVAR, G4DBehavior } from "./utils/game4d-utils";
+import { G4Droutine, G4DType, G4DUNKNOWNVAR, G4DBehavior, G4DVar, G4DMemory, isVarRef, G4DGetType, G4DNOREF, G4DVarRef } from "./utils/game4d-utils";
 
 declare global {
   interface Window {
@@ -21,7 +21,7 @@ export interface RoutineFormat {
     children: Array<RoutineFormat> | undefined;
 };
 
-function get_val(type: string, content:string) : G4DVarType {
+function get_val(type: string, content:string) : G4DType {
     switch (type) {
         case 'int':
             return Number(content);
@@ -40,25 +40,53 @@ function get_val(type: string, content:string) : G4DVarType {
     }
 }
 
+export class G4DSyncMemory extends G4DMemory {
+    updateId : number = 0;
+    locked: boolean = false;
+    updateQueue: Array<string> = [];
+    synchronizeQueue : Array<string> = [];
+    toUpdate: boolean = false;
+    //TODO: construct!
+
+    constructor(eid: number) {
+        super(eid);
+    }
+
+    updateVal(key: string, value: G4DType) : void {
+        // Currently, memory is never locked.
+        if(!this.locked) {
+            super.updateVal(key, value);
+        } else {
+            console.warn(`Variable ${key} cannot be updated! Memory is locked!...`);
+            this.updateQueue.push(`{${key} , ${value}}`);
+        }
+    }
+
+    pushUpdates() : number {
+        this.updateId++;
+        return this.updateId;
+    }
+}
+
 export class Game4DSystem {
 
-    varMap : Map<number, Map<string, G4DVarType>>;
+    // TODO: Preallocate varmap to increase efficiency!
+    varMap : Map<number, G4DSyncMemory>;
     routineMap : Map<number, G4Droutine | null>;
     // Need this for calling objects with name.
     objectMap = new Map<string, ElOrEid>();
+    
+    behaviorQueue : Array<string> = [];
+    variableQueue : Array<string> = [];
 
-    //Queue for sharing any networked behaviors that must be shared between clients
-    networkedBehaviorQueue = new Map<number, Array<G4DBehavior>>();
-    behaviorQueue = new Map<number, Array<G4DBehavior>>();
-
-    global : Map<string, G4DVarType>;
+    global : G4DSyncMemory;
 
     varid : number;
     routineid: number;
 
     constructor(/*Might want to put a global script here later */) {
         // Reserve 0 for global routines; Any global scope variables/routines are called first before searching...
-        this.varMap = new Map([[0, new Map<string, G4DVarType>]]);
+        this.varMap = new Map([[0, new G4DSyncMemory(0)]]);
         this.routineMap = new Map([[0, new G4Droutine]]);
         this.global = this.varMap.get(0)!;
 
@@ -71,16 +99,21 @@ export class Game4DSystem {
     registerVars(eid: number, jsonstr: string) : number {
         console.log("Parsing: " + jsonstr);
         const jsonobj: Array<VariableFormat> = JSON.parse(jsonstr);
-        let vars = new Map<string, G4DVarType>();
+        let mem = new G4DSyncMemory(eid);
 
         jsonobj.forEach(v => {
-            vars.set(v["name"], get_val(v["type"], v["content"]));
+            mem.initVal(v["name"], get_val(v["type"], v["content"]));
         });
 
-        this.varMap.set(eid, vars);
+        this.varMap.set(eid, mem);
 
-        return eid;
+        // Update id.
+        return 0;
     }
+
+    // UpdateVars(eid: number, map: Map<string, G4DVarType>) {
+    //     //TODO; 
+    // }
 
     registerRoutine(jsonstr: string): number {
         console.log("Parsing: " + jsonstr);
@@ -107,45 +140,40 @@ export class Game4DSystem {
         // return undefined;
     }
 
-    getVar(eid: number, name: string) : G4DVarType {
-        let m : Map<string, G4DVarType> | undefined = this.varMap.get(eid);
+    getVal(eid: number, name: string) : G4DType {
+        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
         
         // if(m){
         //     co
         // }
-        console.log(this.global.get(name));
-        if(m && m.get(name)) {
-            return m.get(name)!;
-        } else if(this.global.get(name)) {
-            return this.global.get(name)!;
+        // console.log(this.global.getVal(name));
+        if(m !== undefined) {
+
+        } else if(this.global.getVal(name)) {
+            return this.global.getVal(name)!;
         }
         console.error("Error, no variable found for vid: " + eid + ", name: " + name);
         return {debug_info: `GETVAR NULLRET; GID:${eid} NAME:${name}`} as G4DUNKNOWNVAR;
     }
 
-    findReference(eid: number, name: string) : Map<string, G4DVarType> | undefined {
-        let m : Map<string, G4DVarType> | undefined = this.varMap.get(eid);
-        let o : Map<string, G4DVarType> = this.varMap.get(0)!;
-        console.warn(name, eid, m!.get(name));
+    findRef(eid: number, name: string) : G4DVar {
+        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+        // console.warn(name, eid, m!.get(name));
 
-        if(m && m.get(name) !== undefined){
-            return m;
-        } else if (o.get(name)!== undefined){
-            return o;
+        if(m && m.getVal(name) !== undefined){
+            return {name: name, location: m} as G4DVarRef;
+        } else if (this.global.getVal(name)!== undefined){
+            return {name: name, location: this.global} as G4DVarRef;
         } else {
-            console.warn(`Entity with id ${eid} has no variable map, while variable ${name} is called with this reference`);
-            console.log(m);
+            return {name: name, eid:eid} as G4DNOREF;
         }
-
-        return undefined;
+    
     }
 
-    dbg_listVars(gid: number) : void {
-        let vars : Map<string, G4DVarType> | undefined = this.varMap.get(gid);
-        if (vars != undefined) {
-            vars.forEach((value: G4DVarType, key: string) => {
-                console.log("key: \"" + key + "\"\n val: " + value);                
-            });
+    dbg_listVars(eid: number) : void {
+        let mem : G4DMemory | undefined = this.varMap.get(eid);
+        if (mem !== undefined) {
+            mem.debugList();
         } else {
             console.log("No vars here!");
         }

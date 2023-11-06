@@ -1,7 +1,7 @@
 import { string } from "prop-types";
 import { RoutineFormat } from "../game4d";
 
-export type G4DVarType = number | boolean | string | G4DUNKNOWNVAR;
+export type G4DType = number | boolean | string | G4DUNKNOWNVAR;
 
 export type G4DUNKNOWNVAR = {
     debug_info: string,
@@ -23,58 +23,115 @@ export type G4DVar = G4DVarRef | G4DNOREF;
 
 export type G4DVarRef = {
     name: string,
-    location: Map<string, G4DVarType>;
+    location: G4DMemory
 }
 
 export type G4DNOREF = {
-    name:string,
+    name: string,
     eid: number;
 }
 
-class G4DMemory {
+export class G4DMemory {
+    mem: Map<string, G4DType>;
+    eid: number;
+
+    constructor(eid: number) {
+        this.mem = new Map<string, G4DType>();
+        this.eid = eid;
+    }
+
+    getRef(key: string) : G4DVar {
+        let val = this.mem.get(key);
+
+        if(val !== undefined) {
+            return {name: key, location: this} as G4DVarRef;
+        } else {
+            return {name: key, eid: this.eid} as G4DNOREF;
+        }
+    }
+
+    getVal(key: string): G4DType | undefined {
+        return this.mem.get(key);
+    }
+
+    initVal(key: string, value: G4DType) : void {
+        if(this.mem.get(key) === undefined) {
+            this.mem.set(key, value);
+        } else {
+            console.warn(`Warning: ${key} is already set in memory! Ignoring...`);
+        }
+    }
+
+    updateVal(key: string, value: G4DType) : void {
+        // Currently, memory is never locked.
+        let orig = this.getVal(key);
+        if(orig == undefined) {
+            console.warn(`Variable ${key} not in memory ${this.eid}`);
+        } else if(G4DGetType(value) !== G4DGetType(this.getVal(key))){
+            console.warn(`Updated Variable '${key}' of incorrect type! Expected ${G4DGetType(this.getVal(key))}, got ${G4DGetType(value)}`);
+        } else {
+            this.mem.set(key, value);
+        }
+    }
+
+    debugList() : void {
+        this.mem.forEach((value: G4DType, key: string) => {
+            console.log("key: \"" + key + "\"\n val: " + value);                
+        });
+    }
+
+}
+
+class G4DInnerMemory extends G4DMemory {
     index: number;
-    memory: Map<string, G4DVarType>;
 
-    constructor() {
+    constructor(eid: number) {
+        super(eid);
         this.index = 0;
-        this.memory = new Map<string, G4DVarType>();
     }
 
-    get(key: string) : G4DVarType | undefined{
-        return this.memory.get(key);
-    }
-
-    getMem() : Map<string, G4DVarType> {
-        return this.memory;
-    }
-
-    registerLiteral(literal: G4DVarType/*, type: string*/) : G4DVarRef{
+    registerLiteral(literal: G4DType/*, type: string*/) : G4DVarRef{
         let name = String(this.index++);
-        this.memory.set(name, literal);
-        return {name:name, location: this.memory} as G4DVarRef;
+        super.mem.set(name, literal);
+        return {name:name, location: this} as G4DVarRef;
     }
 }
 
 export const isVarRef = (v: G4DVar) : v is G4DVarRef => (v as G4DVarRef).location !== undefined;
 
+export const isUnknownvar = (t: G4DType): t is G4DUNKNOWNVAR => (t as G4DUNKNOWNVAR).debug_info !== undefined;
 
-function resolveArguments(eid: number, mem: G4DMemory, args: Array<string>): Array<G4DVar> {
+export function G4DGetType(t: G4DType | undefined) : string {
+    if (t === undefined) {
+        return "undefined";
+    }else if(isUnknownvar(t)) {
+        return "UNKOWNVAR";
+    } else {
+        return typeof t;
+    }
+}
+
+
+function resolveArguments(eid: number, mem: G4DInnerMemory, args: Array<string>): Array<G4DVar> {
     let arr: Array<G4DVar> = [];
 
     args.forEach(arg => {
+        // Parse reference!
         if (arg.charAt(0) === "@") {
             console.log("Found reference: " + arg);
             let name = arg.substring(1);
 
-            if(mem.get(arg) !== undefined) {
-                arr.push({name:name, location:mem.getMem()} as G4DVarRef);
+            let ref = mem.getRef(name);
+
+            if(isVarRef(ref)) {
+                arr.push(ref);
             } else {
-                let location: Map<string, G4DVarType> | undefined = G4D.findReference(eid, name);
-                if(location) {
-                    arr.push({name:name, location:location} as G4DVarRef);
+                ref = G4D.findRef(eid, name);
+                if(isVarRef(ref)) {
+                    arr.push(ref);
                 } else {
                     console.error(`Cannot find reference of argument ${arg} in context of entity ${eid}!`);
-                    arr.push({name:arg, eid:eid} as G4DNOREF);
+                    arr.push(ref);
                 }
             }
         } else if(arg.charAt(0) === "_") {
@@ -100,25 +157,25 @@ function G4DUNKNOWNACTION(eid:number, mem: G4DMemory, ...args: Array<G4DVarRef>)
 }
 
 function G4DConsolelog(eid: number, mem: G4DMemory, strf:G4DVar, ...args : Array<G4DVar> ) {
-    let typecheck = isVarRef(strf) &&  typeof strf.location.get(strf.name) === "string";
-    let fargs : Array<G4DVarType> = [];
+    let typecheck = isVarRef(strf) &&  typeof strf.location.getVal(strf.name) === "string";
+    let fargs : Array<G4DType> = [];
     args.forEach(arg => {
         typecheck = typecheck && isVarRef(arg);
         if(typecheck) {
-            fargs.push((arg as G4DVarRef).location.get(arg.name)!);
+            fargs.push((arg as G4DVarRef).location.getVal(arg.name)!);
         }
     });
     if(typecheck){
-        console.log((strf as G4DVarRef).location.get(strf.name), args);
+        console.log((strf as G4DVarRef).location.getVal(strf.name), args);
     }
 }
 
 function G4DIncrement(eid: number, mem: G4DMemory, a:G4DVar) {
     console.log("Increment!");
     if(isVarRef(a)/* && isVarRef(incr)*/) {
-        let val = a.location.get(a.name);
+        let val = a.location.getVal(a.name);
         if (typeof val === "number"/* && typeof incr === "number"*/) {
-            a.location.set(a.name, val + 1);
+            a.location.updateVal(a.name, val + 1);
             console.log(val + 1);
         } else {
             //TODO; neat error handling
@@ -168,7 +225,13 @@ export class G4Droutine {
 
         let curr: G4DNode | undefined = this.head;
         // Define local memory used for inner variables or literals;
-        let mem = new G4DMemory();
+        if (!this.head) {
+            console.warn(`Empty routine from entity;${eid} called!`);
+            return;
+        } 
+
+        let mem = new G4DInnerMemory(eid);
+
 
         while(curr){
             let args: Array<G4DVar> = resolveArguments(eid, mem, curr.args);
@@ -176,10 +239,7 @@ export class G4Droutine {
             curr = curr.next;
         }
 
-        if (!this.head) {
-            console.warn(`Empty routine from entity;${eid} called!`);
-            return;
-        } 
+
 
     }
 }

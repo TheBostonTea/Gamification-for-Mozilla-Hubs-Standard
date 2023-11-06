@@ -98,7 +98,7 @@ import { inflateAudioSettings } from "../inflators/audio-settings";
 import { DoorParams, inflateDoor } from "../inflators/door";
 import { inflateQuestion, QuestionParams } from "../inflators/question";
 import { inflateScript, ScriptParams } from "../inflators/script";
-import { Game4dObjectParams, inflateGame4dObject } from "../inflators/game4d-object";
+import { G4DObjectParams, inflateG4DObject } from "../inflators/g4d-object";
 import { Game4dOnClickParams, inflateGame4dOnClick } from "../inflators/game4d-onclick";
 
 preload(
@@ -403,7 +403,7 @@ export interface GLTFComponentData extends ComponentData {
   door?: DoorParams;
   question?: QuestionParams;
   script?: ScriptParams;
-  game4dObject?:Game4dObjectParams;
+  game4dObject?:G4DObjectParams;
   game4dOnClick?:Game4dOnClickParams;
 }
 
@@ -525,7 +525,7 @@ export const gltfInflators: Required<{ [K in keyof GLTFComponentData]: InflatorF
   door: inflateDoor,
   question: inflateQuestion,
   script: inflateScript,
-  game4dObject: inflateGame4dObject,
+  game4dObject: inflateG4DObject,
   game4dOnClick: inflateGame4dOnClick
 };
 

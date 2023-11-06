@@ -15,6 +15,7 @@ function apply(eid: EntityID, { version, data }: StoredComponent) {
   write(NetworkedTransform.position, eid, position);
   write(NetworkedTransform.rotation, eid, rotation);
   write(NetworkedTransform.scale, eid, scale);
+  console.log("Write transform!")
   return true;
 }
 

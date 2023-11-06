@@ -1,16 +1,16 @@
 import { defineQuery, enterQuery, exitQuery, hasComponent } from "bitecs";
-import { Game4dObject } from "../bit-components";
+import { G4DObject } from "../bit-components";
 import { HubsWorld } from "../app";
 import { game4dRegisterObject , game4dDeregisterObject, game4dRegisterVariables} from "../utils/game4d-api";
-import { GAME4DOBJECT_FLAGS } from "../inflators/game4d-object";
+import { GAME4DOBJECT_FLAGS } from "../inflators/g4d-object";
 
-const game4dObjectQuery = defineQuery([Game4dObject]);
+const game4dObjectQuery = defineQuery([G4DObject]);
 //Do I always need these?
 const game4dObjectEnterQuery = enterQuery(game4dObjectQuery);
 const game4dObjectExitQuery = exitQuery(game4dObjectQuery);
 
 function isActive(eid: number) : boolean {
-    if (Game4dObject.flags[eid] & GAME4DOBJECT_FLAGS.ACTIVE) {
+    if (G4DObject.flags[eid] & GAME4DOBJECT_FLAGS.ACTIVE) {
         return true;
     }
     return false;
@@ -19,7 +19,7 @@ function isActive(eid: number) : boolean {
 export function game4dObjectSystem(world: HubsWorld) {
 
     game4dObjectEnterQuery(world).forEach(function (eid) {
-        G4D.dbg_listVars(Game4dObject.variables[eid]);
+        G4D.dbg_listVars(eid);
 
         // if (id != null && id != undefined) {
         //     game4dRegisterObject(id, eid, isActive(eid));

@@ -77,6 +77,8 @@ export function deserializerWithMigrations(migrations: Map<number, Migration>, a
       migrated = migrations.get(migrated.version)!(migrated);
     }
 
+    // console.log("export changes!")
+
     if (!apply(eid, migrated)) {
       console.error("Failed to deserialize component data.", { original, migrated });
       throw new Error("Failed to deserialize component data.");
