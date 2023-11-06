@@ -11,6 +11,7 @@ function apply(eid: EntityID, { version, data }: StoredComponent) {
   const { isOpen, testString }: { isOpen: number, testString: string } = data;
   write(NetworkedDoor.isOpen, eid, isOpen);
   write(NetworkedDoor.testString, eid, APP.getString(NetworkedDoor.testString[eid]));
+  console.log("Write changes!");
   return true;
 }
 

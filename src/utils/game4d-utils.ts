@@ -15,6 +15,8 @@ export type G4DNode = {
     next: G4DNode | undefined;
 };
 
+export type G4DBehavior = {}; 
+
 //TODO: Actual references to variables, setting of arguments...
 //TODO: "Entrypoint" variables
 export type G4DVar = G4DVarRef | G4DNOREF;
@@ -146,7 +148,7 @@ export class G4Droutine {
     constructor() {
         console.log("Routine has been created!");
         this.head = undefined;
-        this.tail = undefined;
+        //this.tail = undefined;
     }
 
     AddNode(funct: string, args: Array<string>, children: Array<RoutineFormat> | undefined) : void {

@@ -54,6 +54,7 @@ export function doorSystem(world: HubsWorld) {
 
                     // Update the networked door string only when clicking to save on loops
         if (NetworkedDoor.testString[eid] != Door.testString[eid]) {
+            console.log("String updated!");
             Door.testString[eid] = NetworkedDoor.testString[eid];
         }
 

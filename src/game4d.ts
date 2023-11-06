@@ -1,5 +1,5 @@
 import { ElOrEid } from "./utils/bit-utils";
-import { G4Droutine, G4DVarType, G4DUNKNOWNVAR } from "./utils/game4d-utils";
+import { G4Droutine, G4DVarType, G4DUNKNOWNVAR, G4DBehavior } from "./utils/game4d-utils";
 
 declare global {
   interface Window {
@@ -8,13 +8,6 @@ declare global {
 
   const G4D: Game4DSystem;
 }
-
-export const Game4dTypesMap = new Map ([
-    ['int', 1],
-    ['float', 2],
-    ['string', 3],
-    ['boolean', 4]
-]);
 
 export interface VariableFormat {
     name: string;
@@ -51,7 +44,12 @@ export class Game4DSystem {
 
     varMap : Map<number, Map<string, G4DVarType>>;
     routineMap : Map<number, G4Droutine | null>;
+    // Need this for calling objects with name.
     objectMap = new Map<string, ElOrEid>();
+
+    //Queue for sharing any networked behaviors that must be shared between clients
+    networkedBehaviorQueue = new Map<number, Array<G4DBehavior>>();
+    behaviorQueue = new Map<number, Array<G4DBehavior>>();
 
     global : Map<string, G4DVarType>;
 
