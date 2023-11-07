@@ -1,13 +1,13 @@
 import { string } from "prop-types";
-import { RoutineFormat } from "../game4d";
+import { G4DGetValFromType, RoutineFormat } from "../game4d";
+import { G4DFunct, fetchAction } from "./game4d-api";
 
 export type G4DType = number | boolean | string | G4DUNKNOWNVAR;
 
 export type G4DUNKNOWNVAR = {
     debug_info: string,
+    content: string
 }
-
-export type G4DFunct  = (eid: number, mem: G4DMemory, ...args : Array<G4DVar>) => void;
 
 export type G4DNode = {
     action: G4DFunct,
@@ -82,7 +82,7 @@ export class G4DMemory {
 
 }
 
-class G4DInnerMemory extends G4DMemory {
+export class G4DInnerMemory extends G4DMemory {
     index: number;
 
     constructor(eid: number) {
@@ -90,9 +90,10 @@ class G4DInnerMemory extends G4DMemory {
         this.index = 0;
     }
 
-    registerLiteral(literal: G4DType/*, type: string*/) : G4DVarRef{
+    registerLiteral(content: string, type: string) : G4DVarRef{
         let name = String(this.index++);
-        super.mem.set(name, literal);
+        // console.log(`${content}, ${type}`);
+        super.initVal(name, G4DGetValFromType(content, type));
         return {name:name, location: this} as G4DVarRef;
     }
 }
@@ -136,7 +137,7 @@ function resolveArguments(eid: number, mem: G4DInnerMemory, args: Array<string>)
             }
         } else if(arg.charAt(0) === "_") {
             // Only support strings for now!
-            arr.push(mem.registerLiteral(arg.substring(1)));
+            arr.push(mem.registerLiteral(arg.substring(1), "string"));
         } else {
             console.error("Malformed argument name or content: " + arg);
             arr.push({name:arg, eid:eid} as G4DNOREF);
@@ -144,58 +145,6 @@ function resolveArguments(eid: number, mem: G4DInnerMemory, args: Array<string>)
     });
 
     return arr;
-}
-
-// Actions through the api are defined here:string
-function G4DUNKNOWNACTION(eid:number, mem: G4DMemory, ...args: Array<G4DVarRef>) {
-    let stringf = `Entity ${eid} has called an unknown action, with the following arguments:`
-    
-    args.forEach(arg => {
-        stringf += "\n\t" + arg + ",";  
-    });
-    console.warn(stringf);
-}
-
-function G4DConsolelog(eid: number, mem: G4DMemory, strf:G4DVar, ...args : Array<G4DVar> ) {
-    let typecheck = isVarRef(strf) &&  typeof strf.location.getVal(strf.name) === "string";
-    let fargs : Array<G4DType> = [];
-    args.forEach(arg => {
-        typecheck = typecheck && isVarRef(arg);
-        if(typecheck) {
-            fargs.push((arg as G4DVarRef).location.getVal(arg.name)!);
-        }
-    });
-    if(typecheck){
-        console.log((strf as G4DVarRef).location.getVal(strf.name), args);
-    }
-}
-
-function G4DIncrement(eid: number, mem: G4DMemory, a:G4DVar) {
-    console.log("Increment!");
-    if(isVarRef(a)/* && isVarRef(incr)*/) {
-        let val = a.location.getVal(a.name);
-        if (typeof val === "number"/* && typeof incr === "number"*/) {
-            a.location.updateVal(a.name, val + 1);
-            console.log(val + 1);
-        } else {
-            //TODO; neat error handling
-            console.error("Variable of incorrect of unknown type in increment!");
-        }
-    }
-
-}
-
-function fetchAction(funct: string): G4DFunct{
-    switch (funct) {
-        case "console":
-            return G4DConsolelog;
-
-        case "increment":
-            return G4DIncrement;
-            
-        default:
-            return G4DUNKNOWNACTION;
-    }
 }
 
 export class G4Droutine {

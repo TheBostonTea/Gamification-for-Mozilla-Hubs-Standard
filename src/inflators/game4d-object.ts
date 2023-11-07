@@ -28,6 +28,10 @@ export function inflateG4DObject( world: HubsWorld, eid: number, params: G4DObje
     addComponent(world, NetworkedGame4dobject, eid);
 
     Game4dobject.varid[eid] = G4D.registerVars(eid, params.variables);
+    Game4dobject.actid[eid] = G4D.getActid(eid)!;
+
     NetworkedGame4dobject.varid[eid] = Game4dobject.varid[eid];
     NetworkedGame4dobject.updates[eid] = APP.getSid("");
+    NetworkedGame4dobject.actid[eid] = Game4dobject.actid[eid];
+    NetworkedGame4dobject.actions[eid] = APP.getSid("");
 }

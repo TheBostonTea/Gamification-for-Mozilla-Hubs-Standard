@@ -8,9 +8,12 @@ const migrations = new Map<number, Migration>();
 function apply(eid: EntityID, { version, data }: StoredComponent) {
   if (version !== 1) return false;
 
-  const { varid, updates }: { varid: number, updates: string } = data;
+  const { varid, updates, actid, actions }: { varid: number, updates: string, actid: number, actions: string } = data;
   write(NetworkedGame4dobject.varid, eid, varid);
   write(NetworkedGame4dobject.updates, eid, APP.getSid(updates));
+  write(NetworkedGame4dobject.actid, eid, actid);
+  write(NetworkedGame4dobject.actions, eid, APP.getSid(actions));
+
   // console.log("Write changes!");
   return true;
 }
@@ -25,7 +28,9 @@ export const NetworkedG4DObjectSchema: NetworkSchema = {
       version: 1,
       data: {
         varid: read(NetworkedGame4dobject.varid, eid),
-        updates: APP.getString(read(NetworkedGame4dobject.updates, eid))
+        updates: APP.getString(read(NetworkedGame4dobject.updates, eid)),
+        actid: read(NetworkedGame4dobject.actid, eid),
+        actions: APP.getString(read(NetworkedGame4dobject.actions, eid))
       }
     };
   },

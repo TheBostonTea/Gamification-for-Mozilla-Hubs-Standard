@@ -366,13 +366,17 @@ Script.script[$isStringType] = true;
 
 export const Game4dobject = defineComponent({
   varid: Types.ui8,
+  actid: Types.ui8
 });
 
 export const NetworkedGame4dobject = defineComponent({
   varid: Types.ui8,
-  updates: Types.ui32
+  updates: Types.ui32,
+  actid: Types.ui8,
+  actions: Types.ui32
 });
 NetworkedGame4dobject.updates[$isStringType] = true;
+NetworkedGame4dobject.actions[$isStringType] = true;
 
 export const Game4dOnClick = defineComponent({
   flags: Types.ui8,

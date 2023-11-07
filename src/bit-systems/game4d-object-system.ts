@@ -1,7 +1,7 @@
 import { defineQuery, enterQuery, exitQuery, hasComponent } from "bitecs";
 import { Game4dobject, NetworkedGame4dobject } from "../bit-components";
 import { HubsWorld } from "../app";
-import { game4dRegisterObject , game4dDeregisterObject, game4dRegisterVariables} from "../utils/game4d-api";
+import { game4dRegisterObject , game4dDeregisterObject, game4dRegisterVariables} from "../utils/game4d-api_bak";
 import { GAME4DOBJECT_FLAGS } from "../inflators/game4d-object";
 
 const game4dObjectQuery = defineQuery([Game4dobject]);
@@ -33,9 +33,15 @@ export function game4dObjectSystem(world: HubsWorld) {
     game4dObjectQuery(world).forEach( function (eid) {
 
         if (Game4dobject.varid[eid] != NetworkedGame4dobject.varid[eid]) {
-            console.log("Do variable updates!");
-            G4D.synchronize(eid, NetworkedGame4dobject.updates[eid], NetworkedGame4dobject.varid[eid]);
+            // console.log("Do variable updates!");
+            G4D.synchronizeVars(eid, NetworkedGame4dobject.updates[eid], NetworkedGame4dobject.varid[eid]);
             Game4dobject.varid[eid] = NetworkedGame4dobject.varid[eid];
+        }
+
+        if(Game4dobject.actid[eid] != NetworkedGame4dobject.actid[eid]) {
+            // console.log("Do action updates!");
+            G4D.synchronizeActs(eid, NetworkedGame4dobject.actions[eid], NetworkedGame4dobject.actid[eid]);
+            Game4dobject.actid[eid] = NetworkedGame4dobject.actid[eid];
         }
     });
 }

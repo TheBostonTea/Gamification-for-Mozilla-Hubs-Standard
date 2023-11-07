@@ -1,7 +1,7 @@
 import { defineQuery, enterQuery, exitQuery, hasComponent } from "bitecs";
 import { Game4dobject, Game4dOnClick, Interacted, NetworkedGame4dobject } from "../bit-components";
 import { HubsWorld } from "../app";
-import { game4dRegisterObject , game4dDeregisterObject, game4dRegisterVariables, game4dGetIDFromEID, game4dRegisterOnClick, game4dOnClick} from "../utils/game4d-api";
+import { game4dRegisterObject , game4dDeregisterObject, game4dRegisterVariables, game4dGetIDFromEID, game4dRegisterOnClick, game4dOnClick} from "../utils/game4d-api_bak";
 import { GAME4DONCLICK_FLAGS } from "../inflators/game4d-onclick";
 import { takeOwnership } from "../utils/take-ownership";
 
@@ -52,12 +52,21 @@ export function game4dOnClickystem(world: HubsWorld) {
             G4D.callRoutine(Game4dOnClick.actions[eid], eid);
             console.log(Game4dOnClick.actions[eid]);
 
-            if(G4D.hasUpdates(eid)) {
-                console.log("Push Updates!");
+            if(G4D.hasUpdates(eid) || G4D.hasActions(eid)) {
                 takeOwnership(world, eid);
-                NetworkedGame4dobject.updates[eid] = G4D.fetchUpdates(eid)!;
-                Game4dobject.varid[eid] = G4D.getVarid(eid)!;
-                NetworkedGame4dobject.varid[eid] = Game4dobject.varid[eid];
+
+                if(G4D.hasUpdates(eid)) {
+                    NetworkedGame4dobject.updates[eid] = G4D.fetchUpdates(eid)!;
+                    Game4dobject.varid[eid] = G4D.getVarid(eid)!;
+                    NetworkedGame4dobject.varid[eid] = Game4dobject.varid[eid];
+                }
+
+                if(G4D.hasActions(eid)) {
+                    NetworkedGame4dobject.actions[eid] = G4D.fetchActions(eid)!;
+                    Game4dobject.actid[eid] = G4D.getActid(eid)!;
+                    NetworkedGame4dobject.actid[eid] = Game4dobject.actid[eid];
+                }
+
             }
         }
     });

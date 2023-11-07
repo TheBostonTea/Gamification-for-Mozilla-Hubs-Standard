@@ -1,5 +1,6 @@
 import { ElOrEid } from "./utils/bit-utils";
-import { G4Droutine, G4DType, G4DUNKNOWNVAR, G4DBehavior, G4DVar, G4DMemory, isVarRef, G4DGetType, G4DNOREF, G4DVarRef } from "./utils/game4d-utils";
+import { fetchAction, isSideEffect } from "./utils/game4d-api";
+import { G4Droutine, G4DType, G4DUNKNOWNVAR, G4DBehavior, G4DVar, G4DMemory, isVarRef, G4DGetType, G4DNOREF, G4DVarRef, G4DInnerMemory } from "./utils/game4d-utils";
 
 declare global {
   interface Window {
@@ -15,11 +16,15 @@ export interface VariableFormat {
     content: string;
 };
 
-export interface UpdateFormat {
-    name: string;
-    value: string;
-};
+export interface LiteralFormat {
+    type: string;
+    content: string;
+}
 
+export interface ActionFormat {
+    function: string;
+    literals: Array<LiteralFormat>;
+}
 
 export interface RoutineFormat {
     function: string;
@@ -27,11 +32,7 @@ export interface RoutineFormat {
     children: Array<RoutineFormat> | undefined;
 };
 
-export interface UpdatesFormat {
-    vars: Array<UpdateFormat>
-}
-
-function get_val(type: string, content:string) : G4DType {
+export function G4DGetValFromType(content: string, type:string) : G4DType {
     switch (type) {
         case 'int':
             return Number(content);
@@ -50,11 +51,31 @@ function get_val(type: string, content:string) : G4DType {
     }
 }
 
+function dereference_args(args: Array<G4DVar>) : Array<LiteralFormat>{
+    let literals: Array<LiteralFormat> = [];
+    args.forEach(arg => {
+        if(isVarRef(arg)) {
+            let val = arg.location.getVal(arg.name);
+            let t = G4DGetType(val);
+            // console.log((`${arg.name}, ${t}, ${val}`))
+            literals.push({type: t, content: String(val)} as LiteralFormat);
+        } else {
+            literals.push({type: "UNKOWNVAR", content:String(arg.eid) } as LiteralFormat);
+        }
+    });
+
+    return literals;
+}
+
 export class G4DSyncMemory extends G4DMemory {
-    updateId : number = 0;
+    varid : number = 0;
+    actid : number = 0;
     locked: boolean = false;
     updateQueue: Array<VariableFormat> = [];
-    toUpdate: boolean = false;
+    actionQueue : Array<ActionFormat> = [];
+
+    toUpdateVars: boolean = false;
+    toQueueActions: boolean = false;
     //TODO: construct!
 
     constructor(eid: number) {
@@ -65,16 +86,25 @@ export class G4DSyncMemory extends G4DMemory {
         // Currently, memory is never locked.
         if(!this.locked) {
             super.updateVal(key, value);
-            this.toUpdate = true;
+            this.toUpdateVars = true;
             this.updateQueue.push({name : key, type : G4DGetType(value), content : value} as VariableFormat);
         } else {
             console.warn(`Variable ${key} cannot be updated! Memory is locked!...`);
         }
     }
 
-    fetchUpdates() : string{
-        if(this.toUpdate && this.updateQueue.length > 0) {
-            this.updateId++;
+    pushAction(funct: string, args: Array<G4DVar>) : void {
+        if (isSideEffect(funct)) {
+            this.actionQueue.push({function: funct, literals: dereference_args(args)} as ActionFormat);
+            this.toQueueActions = true;
+        } else {
+            console.warn(`Non-side effect function ${funct} with arguments ${args} was pushed onto the behavior queue!`);
+        }
+    }
+
+    fetchUpdates() : string {
+        if(this.toUpdateVars && this.updateQueue.length > 0) {
+            this.varid++;
             let updatestr = JSON.stringify(this.updateQueue);
             this.updateQueue = [];
             return updatestr
@@ -83,22 +113,66 @@ export class G4DSyncMemory extends G4DMemory {
         }
     }
 
+    fetchActions() : string {
+        if(this.toQueueActions && this.actionQueue.length > 0) {
+            this.actid++;
+            let actionstr = JSON.stringify(this.actionQueue);
+            this.actionQueue = [];
+            return actionstr
+        } else {
+            return "";
+        }
+    }
+
     hasUpdates() : boolean {
-        return this.toUpdate;
+        return this.toUpdateVars;
+    }
+
+    hasActions() : boolean {
+        return this.toQueueActions;
     }
 
     getVarid() {
-        return this.updateId;
+        return this.varid;
     }
 
-    pushUpdates(updatestr: string, updateId: number) : void {
-        console.log("Push me, and then just touch me, till blablabla " + updatestr);
-        this.updateId = updateId;
+    getActid() {
+        return this.actid;
+    }
+
+    pushUpdates(updatestr: string, varid: number) : void {
+        // console.log("Push me, and then just touch me, till blablabla " + updatestr);
+        this.varid = varid;
         const update: Array<VariableFormat> = JSON.parse(updatestr);
 
         update.forEach(u => {
-            console.log(`${u['name']}, ${u['type']}, ${u['content']}`);
-            this.mem.set(u["name"], get_val(u["type"], u["content"]));
+            // console.log(`${u['name']}, ${u['type']}, ${u['content']}`);
+            this.mem.set(u["name"], G4DGetValFromType(u["content"], u["type"]));
+        });
+    }
+
+    pushBehaviors(actionstr: string, actid: number) : void {
+        // console.log(actionstr);
+
+        this.actid = actid;
+        const actions: Array<ActionFormat> = JSON.parse(actionstr);
+
+        let mem: G4DInnerMemory = new G4DInnerMemory(super.eid);
+
+        actions.forEach(a => {
+            // console.log(`${a['function']}, ${a['literals']}`);
+            let args: Array<G4DVar> = [];
+            a['literals'].forEach(l =>  {
+                if(l !== undefined) {
+                    // console.log(l.content, l.type);
+                    args.push(mem.registerLiteral(l.content, l.type));
+                } else {
+                    // console.log(l);
+                }
+            })
+
+            let fun = fetchAction(a['function']);
+            fun(super.eid, mem, ...args);
         });
     }
 
@@ -134,12 +208,12 @@ export class Game4DSystem {
     }
 
     registerVars(eid: number, jsonstr: string) : number {
-        console.log("Parsing: " + jsonstr);
+        console.debug("Parsing: " + jsonstr);
         const jsonobj: Array<VariableFormat> = JSON.parse(jsonstr);
         let mem = new G4DSyncMemory(eid);
 
         jsonobj.forEach(v => {
-            mem.initVal(v["name"], get_val(v["type"], v["content"]));
+            mem.initVal(v["name"], G4DGetValFromType(v["content"], v["type"]));
         });
 
         this.varMap.set(eid, mem);
@@ -153,7 +227,7 @@ export class Game4DSystem {
     // }
 
     registerRoutine(jsonstr: string): number {
-        console.log("Parsing: " + jsonstr);
+        console.debug("Parsing: " + jsonstr);
         const jsonobj: Array<RoutineFormat> = JSON.parse(jsonstr);
         let routine = new G4Droutine(/** Parse stuff here... */);
 
@@ -167,7 +241,7 @@ export class Game4DSystem {
     }
 
     callRoutine(gid: number, oid: number) {
-        console.log(`Routine called: ${gid}, ${oid}`);
+        console.debug(`Routine called: ${gid}, ${oid}`);
         let routine = this.routineMap.get(gid);
         if(routine) {
             routine.call(oid);
@@ -180,13 +254,11 @@ export class Game4DSystem {
     getVal(eid: number, name: string) : G4DType {
         let m : G4DSyncMemory | undefined = this.varMap.get(eid);
         
-        // if(m){
-        //     co
-        // }
-        // console.log(this.global.getVal(name));
         if(m !== undefined) {
-
-        } else if(this.global.getVal(name)) {
+            if(m.getVal(name) !== undefined) {
+                return m.getVal(name)!;
+            } 
+        } else if(this.global.getVal(name) !== undefined) {
             return this.global.getVal(name)!;
         }
         console.error("Error, no variable found for vid: " + eid + ", name: " + name);
@@ -206,12 +278,43 @@ export class Game4DSystem {
         return APP.getSid("");
     }
 
+    fetchActions(eid: number) : number | undefined{
+        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+
+        if (m !== undefined) {
+            let actions = m.fetchActions();
+            if(actions !== undefined) {
+                return APP.getSid(actions);
+            } 
+        }
+        
+        return APP.getSid("");
+    }
+
+    pushAction(eid: number, funct: string, ...args: Array<G4DVar>) : void{
+        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+
+        if (m !== undefined) {
+            m.pushAction(funct, args);
+        }
+    }
+
+
     hasUpdates(eid: number) : boolean {
         let m : G4DSyncMemory | undefined = this.varMap.get(eid);
 
         if (m !== undefined) {
-            console.log("Exists!");
             return m.hasUpdates();
+        }
+        
+        return false;
+    }
+
+    hasActions(eid: number) : boolean {
+        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+
+        if (m !== undefined) {
+            return m.hasActions();
         }
         
         return false;
@@ -222,6 +325,16 @@ export class Game4DSystem {
 
         if (m !== undefined) {
             return m.getVarid();
+        }
+        
+        return undefined;
+    }
+
+    getActid(eid:number) : number | undefined{
+        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+
+        if (m !== undefined) {
+            return m.getActid();
         }
         
         return undefined;
@@ -241,12 +354,23 @@ export class Game4DSystem {
     
     }
 
-    synchronize(eid: number, uid: number, varid: number) : void {
+    synchronizeVars(eid: number, uid: number, varid: number) : void {
         let mem : G4DSyncMemory | undefined = this.varMap.get(eid);
         let update : string = APP.getString(uid)!;
 
         if(mem !== undefined) {
             mem.pushUpdates(update, varid);
+        } else {
+            console.warn(`Warning, no memory found for ${eid}!`);
+        }
+    }
+
+    synchronizeActs(eid: number, aid: number, actid: number) : void {
+        let mem : G4DSyncMemory | undefined = this.varMap.get(eid);
+        let actions : string = APP.getString(aid)!;
+
+        if(mem !== undefined) {
+            mem.pushBehaviors(actions, actid);
         } else {
             console.warn(`Warning, no memory found for ${eid}!`);
         }
