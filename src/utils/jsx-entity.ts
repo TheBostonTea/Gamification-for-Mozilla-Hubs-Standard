@@ -100,6 +100,7 @@ import { inflateQuestion, QuestionParams } from "../inflators/question";
 import { inflateScript, ScriptParams } from "../inflators/script";
 import { G4DObjectParams, inflateG4DObject } from "../inflators/game4d-object";
 import { Game4dOnClickParams, inflateGame4dOnClick } from "../inflators/game4d-onclick";
+import { Game4DBehaviorParams, inflateGame4DBehavior} from "../inflators/game4d-behavior"
 
 preload(
   new Promise(resolve => {
@@ -405,6 +406,7 @@ export interface GLTFComponentData extends ComponentData {
   script?: ScriptParams;
   game4dObject?:G4DObjectParams;
   game4dOnClick?:Game4dOnClickParams;
+  game4dBehavior?:Game4DBehaviorParams;
 }
 
 declare global {
@@ -526,7 +528,8 @@ export const gltfInflators: Required<{ [K in keyof GLTFComponentData]: InflatorF
   question: inflateQuestion,
   script: inflateScript,
   game4dObject: inflateG4DObject,
-  game4dOnClick: inflateGame4dOnClick
+  game4dOnClick: inflateGame4dOnClick,
+  game4dBehavior: inflateGame4DBehavior
 };
 
 function jsxInflatorExists(name: string): name is keyof JSXComponentData {

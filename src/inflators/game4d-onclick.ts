@@ -1,23 +1,20 @@
 import { addComponent } from "bitecs";
 import { HubsWorld } from "../app";
-import { CursorRaycastable, Game4dOnClick, RemoteHoverTarget, SingleActionButton} from "../bit-components";
-
-// Bitflag for is active yes/no. 
-export const GAME4DONCLICK_FLAGS = {
-    ACTIVE: 1 << 0,
-    HASVARIABLE: 1 << 1
-}
+import { CursorRaycastable, Game4dOnClick, RemoteHoverTarget, SingleActionButton } from "../bit-components";
 
 export type Game4dOnClickParams = {
-    isActive: boolean,
-    actions: string
+    behaviorRef: string
+    args: string
+    rets: string
 }
 
-export function inflateGame4dOnClick( world: HubsWorld, eid: number, params: Game4dOnClickParams) {
-    console.log("Inflate Game4dOnClick %d", eid);
+export function inflateGame4dOnClick(world: HubsWorld, eid: number, params: Game4dOnClickParams) {
+    console.debug("Inflate Game4dOnClick %d:", eid);
+    console.debug(`Behavior: ${params.behaviorRef}, Args: ${params.args}`)
     addComponent(world, Game4dOnClick, eid);
-    params.isActive && (Game4dOnClick.flags[eid] |= GAME4DONCLICK_FLAGS.ACTIVE);
-    Game4dOnClick.actions[eid] = G4D.registerRoutine(params.actions);
+    Game4dOnClick.behaviorRef[eid] = APP.getSid(params.behaviorRef);
+    Game4dOnClick.args[eid] = APP.getSid(params.args);
+    Game4dOnClick.rets[eid] = APP.getSid(params.rets);
 
     addComponent(world, RemoteHoverTarget, eid);
     addComponent(world, CursorRaycastable, eid);

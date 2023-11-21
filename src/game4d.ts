@@ -1,13 +1,13 @@
 import { ElOrEid } from "./utils/bit-utils";
 import { fetchAction, isSideEffect } from "./utils/game4d-api";
-import { G4Droutine, G4DType, G4DUNKNOWNVAR, G4DBehavior, G4DVar, G4DMemory, isVarRef, G4DGetType, G4DNOREF, G4DVarRef, G4DInnerMemory } from "./utils/game4d-utils";
+import { G4DBehavior, G4DType, G4DUNKNOWNTYPE, G4DVar, G4DMemory, isVarRef, G4DGetType, G4DNOREF, G4DVarRef, G4DInnerMemory, G4DParam } from "./utils/game4d-utils";
 
 declare global {
-  interface Window {
-    G4D: Game4DSystem;
-  }
+    interface Window {
+        G4D: Game4DSystem;
+    }
 
-  const G4D: Game4DSystem;
+    const G4D: Game4DSystem;
 }
 
 export interface VariableFormat {
@@ -16,63 +16,127 @@ export interface VariableFormat {
     content: string;
 };
 
-export interface LiteralFormat {
+export interface ArgumentFormat {
+    name: string;
     type: string;
+}
+
+export interface LiteralFormat {
     content: string;
 }
 
-export interface ActionFormat {
+export interface SyncActionFormat {
     function: string;
     literals: Array<LiteralFormat>;
 }
 
-export interface RoutineFormat {
-    function: string;
-    args: Array<string>;
-    children: Array<RoutineFormat> | undefined;
+export interface BehaviorNodeFormat {
 };
 
-export function G4DGetValFromType(content: string, type:string) : G4DType {
+export interface NewVarNodeFormat extends BehaviorNodeFormat {
+    name: string;
+    value: string;
+};
+
+export interface ActionNodeFormat extends BehaviorNodeFormat {
+    function: string;
+    args: Array<string>;
+}
+
+export interface LoopingNodeFormat extends BehaviorNodeFormat {
+    loopingConditional: ExpressionFormat | string;
+    children: Array<BehaviorNodeFormat>;
+}
+
+export interface LogicBlockFormat extends BehaviorNodeFormat {
+    ifElseNodes: Array<IfElseNodeFormat>;
+}
+
+export interface IfElseNodeFormat {
+    conditional: ExpressionFormat | string;
+    children: Array<BehaviorNodeFormat>;
+}
+
+export interface ExpressionFormat {
+    leftexpr: string | ExpressionFormat;
+    operator: string;
+    rightexpr: string | ExpressionFormat;
+}
+
+export const isNewVarNodeFormat = (f: BehaviorNodeFormat): f is NewVarNodeFormat => (f as NewVarNodeFormat).name !== undefined;
+
+export const isActionNodeFormat = (f: BehaviorNodeFormat): f is ActionNodeFormat => (f as ActionNodeFormat).function !== undefined;
+
+export const isLoopingNodeFormat = (f: BehaviorNodeFormat): f is LoopingNodeFormat => (f as LoopingNodeFormat).loopingConditional !== undefined;
+
+export const isLogicBlockFormat = (f: BehaviorNodeFormat): f is LogicBlockFormat => (f as LogicBlockFormat).ifElseNodes !== undefined;
+
+export const isExpressionFormat = (f: string | ExpressionFormat): f is ExpressionFormat => (f as ExpressionFormat).operator !== undefined;
+
+export function G4DGetValFromType(content: string, type: string): G4DType {
     switch (type) {
-        case 'int':
-            return Number(content);
+    case 'int':
+        return Number(content);
 
-        case 'float':
-            return Number(content);
+    case 'float':
+        return Number(content);
 
-        case 'string':
-            return content;
+    case 'number':
+        return Number(content);
 
-        case 'boolean':
-            return Boolean(content);
-        default:
-            return {debug_info: `UNKNOWNTYPE; TYPE:${type}, CONTENT:${content}`} as G4DUNKNOWNVAR; 
+    case 'string':
+        return content;
+
+    case 'boolean':
+        return Boolean(content);
+    default:
+        return { debug_info: `UNKNOWNTYPE; TYPE:${type}, CONTENT:${content}` } as G4DUNKNOWNTYPE;
 
     }
 }
 
-function dereference_args(args: Array<G4DVar>) : Array<LiteralFormat>{
+function dereference_args(args: Array<G4DVar>): Array<LiteralFormat> {
     let literals: Array<LiteralFormat> = [];
     args.forEach(arg => {
-        if(isVarRef(arg)) {
+        if (isVarRef(arg)) {
             let val = arg.location.getVal(arg.name);
             let t = G4DGetType(val);
             // console.log((`${arg.name}, ${t}, ${val}`))
-            literals.push({type: t, content: String(val)} as LiteralFormat);
+            literals.push({ content: `${t}:${val}` } as LiteralFormat);
         } else {
-            literals.push({type: "UNKOWNVAR", content:String(arg.eid) } as LiteralFormat);
+            literals.push({ content: `UNKOWNVAR:${arg.eid}` } as LiteralFormat);
         }
     });
 
     return literals;
 }
 
+function parseParams(argstr: string): Array<G4DParam> {
+    let args: Array<G4DParam> = [];
+    let argstrs = argstr.split(",");
+
+    argstrs.forEach(a => {
+        let aa = a.split(":");
+        if (aa.length == 2) {
+            args.push({ name: aa[0], type: aa[1] } as G4DParam);
+        } else {
+            console.error(`Argument ${a} malformed: Expected format "name : type"!`)
+        }
+    });
+
+    return args;
+}
+
+function parseReturnTypes(returnstr: string) {
+    return returnstr.split(",");
+}
+
 export class G4DSyncMemory extends G4DMemory {
-    varid : number = 0;
-    actid : number = 0;
+    varid: number = 0;
+    actid: number = 0;
     locked: boolean = false;
     updateQueue: Array<VariableFormat> = [];
-    actionQueue : Array<ActionFormat> = [];
+    actionQueue: Array<SyncActionFormat> = [];
 
     toUpdateVars: boolean = false;
     toQueueActions: boolean = false;
@@ -82,28 +146,28 @@ export class G4DSyncMemory extends G4DMemory {
         super(eid);
     }
 
-    updateVal(key: string, value: G4DType) : void {
+    updateVal(key: string, value: G4DType): void {
         // Currently, memory is never locked.
-        if(!this.locked) {
+        if (!this.locked) {
             super.updateVal(key, value);
             this.toUpdateVars = true;
-            this.updateQueue.push({name : key, type : G4DGetType(value), content : value} as VariableFormat);
+            this.updateQueue.push({ name: key, type: G4DGetType(value), content: value } as VariableFormat);
         } else {
             console.warn(`Variable ${key} cannot be updated! Memory is locked!...`);
         }
     }
 
-    pushAction(funct: string, args: Array<G4DVar>) : void {
+    pushAction(funct: string, args: Array<G4DVar>): void {
         if (isSideEffect(funct)) {
-            this.actionQueue.push({function: funct, literals: dereference_args(args)} as ActionFormat);
+            this.actionQueue.push({ function: funct, literals: dereference_args(args) } as SyncActionFormat);
             this.toQueueActions = true;
         } else {
             console.warn(`Non-side effect function ${funct} with arguments ${args} was pushed onto the behavior queue!`);
         }
     }
 
-    fetchUpdates() : string {
-        if(this.toUpdateVars && this.updateQueue.length > 0) {
+    fetchUpdates(): string {
+        if (this.toUpdateVars && this.updateQueue.length > 0) {
             this.varid++;
             let updatestr = JSON.stringify(this.updateQueue);
             this.updateQueue = [];
@@ -113,8 +177,8 @@ export class G4DSyncMemory extends G4DMemory {
         }
     }
 
-    fetchActions() : string {
-        if(this.toQueueActions && this.actionQueue.length > 0) {
+    fetchActions(): string {
+        if (this.toQueueActions && this.actionQueue.length > 0) {
             this.actid++;
             let actionstr = JSON.stringify(this.actionQueue);
             this.actionQueue = [];
@@ -124,11 +188,11 @@ export class G4DSyncMemory extends G4DMemory {
         }
     }
 
-    hasUpdates() : boolean {
+    hasUpdates(): boolean {
         return this.toUpdateVars;
     }
 
-    hasActions() : boolean {
+    hasActions(): boolean {
         return this.toQueueActions;
     }
 
@@ -140,7 +204,7 @@ export class G4DSyncMemory extends G4DMemory {
         return this.actid;
     }
 
-    pushUpdates(updatestr: string, varid: number) : void {
+    pushUpdates(updatestr: string, varid: number): void {
         // console.log("Push me, and then just touch me, till blablabla " + updatestr);
         this.varid = varid;
         const update: Array<VariableFormat> = JSON.parse(updatestr);
@@ -151,21 +215,21 @@ export class G4DSyncMemory extends G4DMemory {
         });
     }
 
-    pushBehaviors(actionstr: string, actid: number) : void {
+    pushBehaviors(actionstr: string, actid: number): void {
         // console.log(actionstr);
 
         this.actid = actid;
-        const actions: Array<ActionFormat> = JSON.parse(actionstr);
+        const actions: Array<SyncActionFormat> = JSON.parse(actionstr);
 
         let mem: G4DInnerMemory = new G4DInnerMemory(super.eid);
 
         actions.forEach(a => {
             // console.log(`${a['function']}, ${a['literals']}`);
             let args: Array<G4DVar> = [];
-            a['literals'].forEach(l =>  {
-                if(l !== undefined) {
+            a['literals'].forEach(l => {
+                if (l !== undefined) {
                     // console.log(l.content, l.type);
-                    args.push(mem.registerLiteral(l.content, l.type));
+                    args.push(mem.registerLiteral(l.content));
                 } else {
                     // console.log(l);
                 }
@@ -181,33 +245,38 @@ export class G4DSyncMemory extends G4DMemory {
 export class Game4DSystem {
 
     // TODO: Preallocate varmap to increase efficiency!
-    varMap : Map<number, G4DSyncMemory>;
-    routineMap : Map<number, G4Droutine | null>;
+    varMap: Map<number, G4DSyncMemory>;
+    behaviorMap: Map<number, G4DBehavior | null>;
+    behaviorStr2Num: Map<string, number>;
+    behaviorNum2Str: Map<number, string>;
     // Need this for calling objects with name.
     objectMap = new Map<string, ElOrEid>();
     // updateQueue = new Array<string>();
 
-    
-    behaviorQueue : Array<string> = [];
 
-    global : G4DSyncMemory;
+    behaviorQueue: Array<string> = [];
 
-    varid : number;
-    routineid: number;
+    global: G4DSyncMemory;
+
+    varid: number;
+    behaviorid: number;
 
     constructor(/*Might want to put a global script here later */) {
         // Reserve 0 for global routines; Any global scope variables/routines are called first before searching...
         this.varMap = new Map([[0, new G4DSyncMemory(0)]]);
-        this.routineMap = new Map([[0, new G4Droutine]]);
+        this.behaviorMap = new Map([[0, null]]);
+        this.behaviorNum2Str = new Map<number, string>();
+        this.behaviorStr2Num = new Map<string, number>();
+
         this.global = this.varMap.get(0)!;
 
         this.varid = 1;
-        this.routineid = 1;
+        this.behaviorid = 1;
 
         console.log("Game4D System up and running...");
     }
 
-    registerVars(eid: number, jsonstr: string) : number {
+    registerVars(eid: number, jsonstr: string): number {
         console.debug("Parsing: " + jsonstr);
         const jsonobj: Array<VariableFormat> = JSON.parse(jsonstr);
         let mem = new G4DSyncMemory(eid);
@@ -226,73 +295,129 @@ export class Game4DSystem {
     //     //TODO; 
     // }
 
-    registerRoutine(jsonstr: string): number {
-        console.debug("Parsing: " + jsonstr);
-        const jsonobj: Array<RoutineFormat> = JSON.parse(jsonstr);
-        let routine = new G4Droutine(/** Parse stuff here... */);
+    // registerRoutine(jsonstr: string): number {
+    //     console.debug("Parsing: " + jsonstr);
+    //     const jsonobj: Array<BehaviorFormat> = JSON.parse(jsonstr);
+    //     let routine = new G4DBehavior([]/** Parse stuff here... */);
 
-        jsonobj.forEach(n => {
-            routine.AddNode(n["function"], n["args"], n["children"]);
-        });
+    //     jsonobj.forEach(n => {
+    //         routine.AddNode(n["function"], n["args"], n["children"]);
+    //     });
 
-        let routineid = this.routineid++;
-        this.routineMap.set(routineid, routine);
-        return routineid;
-    }
+    //     let routineid = this.behaviorid++;
+    //     this.behaviorMap.set(routineid, routine);
+    //     return routineid;
+    // }
 
-    callRoutine(gid: number, oid: number) {
-        console.debug(`Routine called: ${gid}, ${oid}`);
-        let routine = this.routineMap.get(gid);
-        if(routine) {
-            routine.call(oid);
+    registerBehavior(name: string, paramstr: string, returnstr: string, behaviorJson: string): void {
+        console.debug(`Creating ${name}(${paramstr}) => (${returnstr}) : ${behaviorJson} ...`);
+
+        if (this.behaviorStr2Num.get(name) == undefined) {
+            let params: Array<G4DParam> = parseParams(paramstr);
+            let returnTypes = parseReturnTypes(returnstr);
+
+            try {
+                const jsonobj: Array<BehaviorNodeFormat> = JSON.parse(behaviorJson);
+                let behavior = new G4DBehavior(name, params, returnTypes, jsonobj);
+
+                this.behaviorid++;
+                this.behaviorStr2Num.set(name, this.behaviorid);
+                this.behaviorNum2Str.set(this.behaviorid, name);
+
+                this.behaviorMap.set(this.behaviorid, behavior);
+
+            } catch (error) {
+                console.error(error);
+                console.error("Ignoring behavior...");
+            }
+
         } else {
-            console.error("Routine with " + gid + " not found!");
+            console.warn(`Behavior with duplicate name ${name}! Ignoring...`);
         }
-        // return undefined;
     }
 
-    getVal(eid: number, name: string) : G4DType {
-        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
-        
-        if(m !== undefined) {
-            if(m.getVal(name) !== undefined) {
+    // callRoutine(gid: number, oid: number) {
+    //     console.debug(`Routine called: ${gid}, ${oid}`);
+    //     let routine = this.behaviorMap.get(gid);
+    //     if(routine) {
+    //         routine.call(oid);
+    //     } else {
+    //         console.error("Routine with " + gid + " not found!");
+    //     }
+    //     // return undefined;
+    // }
+
+    callBehavior(name: string, eid: number, argstr: string, retstr: string) {
+        console.debug(`Entity ${eid} calling behavior: ${name}, with arguments: ${argstr}`);
+        let bid: number | undefined = this.behaviorStr2Num.get(name);
+        if (bid !== undefined) {
+            console.log(argstr, retstr);
+            let args: Array<string> = argstr.split(",");
+            let rets: Array<string> = retstr.split(",");
+            let behavior: G4DBehavior = this.behaviorMap.get(bid)!
+            let returnVals: Array<G4DType> = behavior.call(eid, args);
+
+            if (returnVals.length === rets.length) {
+                for (let i = 0; i < returnVals.length; i++) {
+                    let orig = this.varMap.get(eid)!.getVal(rets[i]);
+                    console.log(orig, returnVals[i]);
+                    if (typeof orig === typeof returnVals[i]) {
+                        this.varMap.get(eid)!.updateVal(rets[i], returnVals[i]);
+                    } else {
+                        return;
+                    }
+                }
+            } else {
+                console.log("NO MAN HAHAHAHA!", rets.length, returnVals.length)
+            }
+
+        } else {
+            console.error("Behavior " + name + " not found!");
+        }
+    }
+
+    getVal(eid: number, name: string): G4DType {
+        let m: G4DSyncMemory | undefined = this.varMap.get(eid);
+
+        if (m !== undefined) {
+            if (m.getVal(name) !== undefined) {
                 return m.getVal(name)!;
-            } 
-        } else if(this.global.getVal(name) !== undefined) {
+            }
+        } else if (this.global.getVal(name) !== undefined) {
             return this.global.getVal(name)!;
         }
-        console.error("Error, no variable found for vid: " + eid + ", name: " + name);
-        return {debug_info: `GETVAR NULLRET; GID:${eid} NAME:${name}`} as G4DUNKNOWNVAR;
+        console.error("Error, no variable found for eid: " + eid + ", name: " + name);
+        return { debug_info: `GETVAR NULLRET; GID:${eid} NAME:${name}` } as G4DUNKNOWNTYPE;
     }
 
-    fetchUpdates(eid: number) : number | undefined{
-        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+    fetchUpdates(eid: number): number | undefined {
+        let m: G4DSyncMemory | undefined = this.varMap.get(eid);
 
         if (m !== undefined) {
             let updates = m.fetchUpdates();
-            if(updates !== undefined) {
+            if (updates !== undefined) {
                 return APP.getSid(updates);
-            } 
+            }
         }
-        
+
         return APP.getSid("");
     }
 
-    fetchActions(eid: number) : number | undefined{
-        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+    fetchActions(eid: number): number | undefined {
+        let m: G4DSyncMemory | undefined = this.varMap.get(eid);
 
         if (m !== undefined) {
             let actions = m.fetchActions();
-            if(actions !== undefined) {
+            if (actions !== undefined) {
                 return APP.getSid(actions);
-            } 
+            }
         }
-        
+
         return APP.getSid("");
     }
 
-    pushAction(eid: number, funct: string, ...args: Array<G4DVar>) : void{
-        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+    pushAction(eid: number, funct: string, ...args: Array<G4DVar>): void {
+        let m: G4DSyncMemory | undefined = this.varMap.get(eid);
 
         if (m !== undefined) {
             m.pushAction(funct, args);
@@ -300,84 +425,84 @@ export class Game4DSystem {
     }
 
 
-    hasUpdates(eid: number) : boolean {
-        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+    hasUpdates(eid: number): boolean {
+        let m: G4DSyncMemory | undefined = this.varMap.get(eid);
 
         if (m !== undefined) {
             return m.hasUpdates();
         }
-        
+
         return false;
     }
 
-    hasActions(eid: number) : boolean {
-        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+    hasActions(eid: number): boolean {
+        let m: G4DSyncMemory | undefined = this.varMap.get(eid);
 
         if (m !== undefined) {
             return m.hasActions();
         }
-        
+
         return false;
     }
 
-    getVarid(eid:number) : number | undefined{
-        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+    getVarid(eid: number): number | undefined {
+        let m: G4DSyncMemory | undefined = this.varMap.get(eid);
 
         if (m !== undefined) {
             return m.getVarid();
         }
-        
+
         return undefined;
     }
 
-    getActid(eid:number) : number | undefined{
-        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+    getActid(eid: number): number | undefined {
+        let m: G4DSyncMemory | undefined = this.varMap.get(eid);
 
         if (m !== undefined) {
             return m.getActid();
         }
-        
+
         return undefined;
     }
 
-    findRef(eid: number, name: string) : G4DVar {
-        let m : G4DSyncMemory | undefined = this.varMap.get(eid);
+    findRef(eid: number, name: string): G4DVar {
+        let m: G4DSyncMemory | undefined = this.varMap.get(eid);
         // console.warn(name, eid, m!.get(name));
 
-        if(m && m.getVal(name) !== undefined){
-            return {name: name, location: m} as G4DVarRef;
-        } else if (this.global.getVal(name)!== undefined){
-            return {name: name, location: this.global} as G4DVarRef;
+        if (m && m.getVal(name) !== undefined) {
+            return { name: name, location: m } as G4DVarRef;
+        } else if (this.global.getVal(name) !== undefined) {
+            return { name: name, location: this.global } as G4DVarRef;
         } else {
-            return {name: name, eid:eid} as G4DNOREF;
+            return { name: name, eid: eid } as G4DNOREF;
         }
-    
+
     }
 
-    synchronizeVars(eid: number, uid: number, varid: number) : void {
-        let mem : G4DSyncMemory | undefined = this.varMap.get(eid);
-        let update : string = APP.getString(uid)!;
+    synchronizeVars(eid: number, uid: number, varid: number): void {
+        let mem: G4DSyncMemory | undefined = this.varMap.get(eid);
+        let update: string = APP.getString(uid)!;
 
-        if(mem !== undefined) {
+        if (mem !== undefined) {
             mem.pushUpdates(update, varid);
         } else {
             console.warn(`Warning, no memory found for ${eid}!`);
         }
     }
 
-    synchronizeActs(eid: number, aid: number, actid: number) : void {
-        let mem : G4DSyncMemory | undefined = this.varMap.get(eid);
-        let actions : string = APP.getString(aid)!;
+    synchronizeActs(eid: number, aid: number, actid: number): void {
+        let mem: G4DSyncMemory | undefined = this.varMap.get(eid);
+        let actions: string = APP.getString(aid)!;
 
-        if(mem !== undefined) {
+        if (mem !== undefined) {
             mem.pushBehaviors(actions, actid);
         } else {
             console.warn(`Warning, no memory found for ${eid}!`);
         }
     }
 
-    dbg_listVars(eid: number) : void {
-        let mem : G4DMemory | undefined = this.varMap.get(eid);
+    dbg_listVars(eid: number): void {
+        let mem: G4DMemory | undefined = this.varMap.get(eid);
         if (mem !== undefined) {
             mem.debugList();
         } else {

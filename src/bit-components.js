@@ -379,7 +379,11 @@ NetworkedGame4dobject.updates[$isStringType] = true;
 NetworkedGame4dobject.actions[$isStringType] = true;
 
 export const Game4dOnClick = defineComponent({
-  flags: Types.ui8,
-  actions: Types.ui32
+  behaviorRef: Types.ui32,
+  args: Types.ui32,
+  rets: Types.ui32
 });
-Game4dOnClick.actions[$isStringType] = true;
+Game4dOnClick.behaviorRef[$isStringType] = true;
+Game4dOnClick.args[$isStringType] = true;
+Game4dOnClick.rets[$isStringType] = true;
+
