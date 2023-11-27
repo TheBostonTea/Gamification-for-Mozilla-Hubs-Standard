@@ -321,18 +321,15 @@ export const LinearScale = defineComponent({
 // Register "Door", with a ui8 type; the smallest integer
 // available in typescript. Will hold the boolean in the
 // right most bit. 
-/**
- * @Deprecated No longer using "doors"!
- */
+
+/** @Deprecated */
 export const Door = defineComponent({
   isOpen: Types.ui8,
   testString: Types.ui32
 });
 Door.testString[$isStringType] = true;
 
-/**
- * @Deprecated No longer using "doors"!
- */
+/** @Deprecated */
 export const NetworkedDoor = defineComponent({
   isOpen: Types.ui8,
   testString: Types.ui32
@@ -340,15 +337,14 @@ export const NetworkedDoor = defineComponent({
 NetworkedDoor.testString[$isStringType] = true;
 
 
-/**
- * @Deprecated No longer using question objects!
- */
+/** @Deprecated */
 export const Question = defineComponent({
   question : Types.ui32
 });
 // Trick needed to make the conversion from string to integer work!
 Question.question[$isStringType] = true;
 
+/** @Deprecated */
 export const QuestionInterface = defineComponent({
     //TODO: Remove!
     targetRef: Types.eid,
@@ -356,27 +352,29 @@ export const QuestionInterface = defineComponent({
     //clearTargetTimer: Types.f64
 });
 
-/**
- * @Deprecated No longer using scripts!
- */
+/** @Deprecated */
 export const Script = defineComponent({
   script : Types.ui8
 });
 Script.script[$isStringType] = true;
 
-export const Game4dobject = defineComponent({
+export const Game4dObject = defineComponent({
+  identifier: Types.ui32,
   varid: Types.ui8,
-  actid: Types.ui8
+  actid: Types.ui8,
+  flags: Types.ui8
 });
 
-export const NetworkedGame4dobject = defineComponent({
+Game4dObject.identifier[$isStringType] = true
+
+export const NetworkedGame4dObject = defineComponent({
   varid: Types.ui8,
   updates: Types.ui32,
   actid: Types.ui8,
   actions: Types.ui32
 });
-NetworkedGame4dobject.updates[$isStringType] = true;
-NetworkedGame4dobject.actions[$isStringType] = true;
+NetworkedGame4dObject.updates[$isStringType] = true;
+NetworkedGame4dObject.actions[$isStringType] = true;
 
 export const Game4dOnClick = defineComponent({
   behaviorRef: Types.ui32,
@@ -386,4 +384,40 @@ export const Game4dOnClick = defineComponent({
 Game4dOnClick.behaviorRef[$isStringType] = true;
 Game4dOnClick.args[$isStringType] = true;
 Game4dOnClick.rets[$isStringType] = true;
+
+export const Game4dOnCollision = defineComponent({
+  behaviorRef: Types.ui32,
+  args: Types.ui32,
+  rets: Types.ui32,
+  timeout: Types.f32
+});
+Game4dOnClick.behaviorRef[$isStringType] = true;
+Game4dOnClick.args[$isStringType] = true;
+Game4dOnClick.rets[$isStringType] = true;
+
+export const Game4dOnMoveAt = defineComponent({
+  behaviorRef: Types.ui32,
+  args: Types.ui32,
+  rets: Types.ui32,
+  range: Types.f32,
+  timeout:Types.f32,
+  lastInteraction: Types.f32
+});
+Game4dOnMoveAt.behaviorRef[$isStringType] = true;
+Game4dOnMoveAt.args[$isStringType] = true;
+Game4dOnMoveAt.rets[$isStringType] = true;
+
+export const Game4dOnCall = defineComponent({
+  behaviorRef: Types.ui32,
+  args: Types.ui32,
+  rets: Types.ui32,
+  flags: Types.ui8,
+  allowedSources: Types.ui32
+})
+Game4dOnCall.behaviorRef[$isStringType] = true;
+Game4dOnCall.args[$isStringType] = true;
+Game4dOnCall.rets[$isStringType] = true;
+Game4dOnCall.allowedSources[$isStringType] = true;
+
+
 

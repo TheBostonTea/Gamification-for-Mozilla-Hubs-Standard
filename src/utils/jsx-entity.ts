@@ -100,7 +100,9 @@ import { inflateQuestion, QuestionParams } from "../inflators/question";
 import { inflateScript, ScriptParams } from "../inflators/script";
 import { G4DObjectParams, inflateG4DObject } from "../inflators/game4d-object";
 import { Game4dOnClickParams, inflateGame4dOnClick } from "../inflators/game4d-onclick";
-import { Game4DBehaviorParams, inflateGame4DBehavior} from "../inflators/game4d-behavior"
+import { Game4DBehaviorParams, inflateGame4DBehavior } from "../inflators/game4d-behavior"
+import { Game4dOnMoveAtParams, inflateGame4dOnMoveAt } from "../inflators/game4d-onmoveat";
+import { Game4dOnCallParams, inflateGame4dOnCall } from "../inflators/game4d-oncall";
 
 preload(
   new Promise(resolve => {
@@ -404,18 +406,20 @@ export interface GLTFComponentData extends ComponentData {
   door?: DoorParams;
   question?: QuestionParams;
   script?: ScriptParams;
-  game4dObject?:G4DObjectParams;
-  game4dOnClick?:Game4dOnClickParams;
-  game4dBehavior?:Game4DBehaviorParams;
+  game4dObject?: G4DObjectParams;
+  game4dOnClick?: Game4dOnClickParams;
+  game4dOnMoveAt?: Game4dOnMoveAtParams;
+  game4dOnCall?: Game4dOnCallParams;
+  game4dBehavior?: Game4DBehaviorParams;
 }
 
 declare global {
   namespace createElementEntity.JSX {
     interface IntrinsicElements {
       entity: JSXComponentData &
-        Attrs & {
-          children?: IntrinsicElements[];
-        };
+      Attrs & {
+        children?: IntrinsicElements[];
+      };
     }
 
     interface ElementChildrenAttribute {
@@ -475,7 +479,7 @@ const jsxInflators: Required<{ [K in keyof JSXComponentData]: InflatorFn }> = {
   sceneLoader: createDefaultInflator(SceneLoader),
   networkDebug: createDefaultInflator(NetworkDebug),
   waypointPreview: createDefaultInflator(WaypointPreview),
-  questionInterface:createDefaultInflator(QuestionInterface),
+  questionInterface: createDefaultInflator(QuestionInterface),
   pdf: inflatePDF,
   mediaLoader: inflateMediaLoader,
 
@@ -529,6 +533,8 @@ export const gltfInflators: Required<{ [K in keyof GLTFComponentData]: InflatorF
   script: inflateScript,
   game4dObject: inflateG4DObject,
   game4dOnClick: inflateGame4dOnClick,
+  game4dOnMoveAt: inflateGame4dOnMoveAt,
+  game4dOnCall: inflateGame4dOnCall,
   game4dBehavior: inflateGame4DBehavior
 };
 

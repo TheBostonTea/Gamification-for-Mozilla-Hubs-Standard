@@ -1,3 +1,4 @@
+import { AComponent, AElement } from "aframe";
 import { ElOrEid } from "./utils/bit-utils";
 import { fetchAction, isSideEffect } from "./utils/game4d-api";
 import { G4DBehavior, G4DType, G4DUNKNOWNTYPE, G4DVar, G4DMemory, isVarRef, G4DGetType, G4DNOREF, G4DVarRef, G4DInnerMemory, G4DParam } from "./utils/game4d-utils";
@@ -113,17 +114,19 @@ function dereference_args(args: Array<G4DVar>): Array<LiteralFormat> {
 
 function parseParams(argstr: string): Array<G4DParam> {
     let args: Array<G4DParam> = [];
-    let argstrs = argstr.split(",");
 
-    argstrs.forEach(a => {
-        let aa = a.split(":");
-        if (aa.length == 2) {
-            args.push({ name: aa[0], type: aa[1] } as G4DParam);
-        } else {
-            console.error(`Argument ${a} malformed: Expected format "name : type"!`)
-        }
-    });
+    if (argstr !== "") {
+        let argstrs = argstr.split(",");
 
+        argstrs.forEach(a => {
+            let aa = a.split(":");
+            if (aa.length == 2) {
+                args.push({ name: aa[0], type: aa[1] } as G4DParam);
+            } else {
+                console.error(`Argument ${a} malformed: Expected format "name : type"!`)
+            }
+        });
+    }
     return args;
 }
 
@@ -242,6 +245,17 @@ export class G4DSyncMemory extends G4DMemory {
 
 }
 
+// Use the PlayerInfo interface to allow the not yet registered ACompinent from player-info.js to be recognized as a interface in typescript.
+export interface PlayerInfo extends AComponent {
+    isLocalPlayerInfo: boolean | undefined;
+    el: AElement;
+}
+
+type callEntry = {
+    source: string,
+    args: Array<string>,
+}
+
 export class Game4DSystem {
 
     // TODO: Preallocate varmap to increase efficiency!
@@ -251,6 +265,7 @@ export class Game4DSystem {
     behaviorNum2Str: Map<number, string>;
     // Need this for calling objects with name.
     objectMap = new Map<string, ElOrEid>();
+    callMap = new Map<string, Array<callEntry>>();
     // updateQueue = new Array<string>();
 
 
@@ -260,6 +275,9 @@ export class Game4DSystem {
 
     varid: number;
     behaviorid: number;
+
+    //Use A-frame for this; there is no BitEcs player code **yet**.
+    localPlayerEl: PlayerInfo | undefined = undefined;
 
     constructor(/*Might want to put a global script here later */) {
         // Reserve 0 for global routines; Any global scope variables/routines are called first before searching...
@@ -272,6 +290,22 @@ export class Game4DSystem {
 
         this.varid = 1;
         this.behaviorid = 1;
+
+        // const playerInfos = window.APP.componentRegistry["player-info"];
+        // if (playerInfos) {
+        //     for (let i = 0; i < playerInfos.length; i++) {
+        //         const playerInfo = playerInfos[i];
+        //         if ((playerInfo as PlayerInfo).isLocalPlayerInfo) {
+        //             this.localPlayerEl = (playerInfo as PlayerInfo);
+        //         }
+        //     }
+        // }
+
+        // if (this.localPlayerEl === undefined) {
+        //     console.error("No local player found!")
+        // } else {
+        //     console.debug(`Local player found: Id ${NAF.clientId}`);
+        // }
 
         console.log("Game4D System up and running...");
     }
@@ -347,12 +381,17 @@ export class Game4DSystem {
     //     // return undefined;
     // }
 
-    callBehavior(name: string, eid: number, argstr: string, retstr: string) {
+    callBehavior(name: string, eid: number, interactionArgs: Array<string>, argstr: string, retstr: string) {
         console.debug(`Entity ${eid} calling behavior: ${name}, with arguments: ${argstr}`);
         let bid: number | undefined = this.behaviorStr2Num.get(name);
         if (bid !== undefined) {
             console.log(argstr, retstr);
-            let args: Array<string> = argstr.split(",");
+            let args: Array<string> = [];
+            if (argstr !== "") {
+                args = interactionArgs.concat(argstr.split(","));
+            } else {
+                args = interactionArgs;
+            }
             let rets: Array<string> = retstr.split(",");
             let behavior: G4DBehavior = this.behaviorMap.get(bid)!
             let returnVals: Array<G4DType> = behavior.call(eid, args);
@@ -501,6 +540,55 @@ export class Game4DSystem {
         }
     }
 
+    hasCalls(name: string): boolean {
+        return this.callMap.has(name) && this.callMap.get(name)!.length > 0;
+    }
+
+    /** @todo implement */
+    getCall(name: string, limitSources: boolean, acceptedSources: string): Array<string> | undefined {
+        if (this.callMap.has(name) && this.callMap.get(name)!.length > 0) {
+            const callEntries: Array<callEntry> = this.callMap.get(name)!;
+            const callEntriesCp = callEntries.slice();
+
+            if (limitSources) {
+
+                console.log(acceptedSources);
+
+                const sources: Array<string> = acceptedSources.split(",");
+
+                for (let i = 0; i < sources.length; i++) {
+                    sources[i] = sources[i].trim();
+                }
+
+                for (let i = 0; i < callEntries.length; i++) {
+                    const e = callEntries[i];
+
+                    if (sources.indexOf(e.source) !== -1) {
+                        callEntriesCp.shift();
+                        this.callMap.set(name, callEntriesCp);
+                        return e.args;
+                    } else {
+                        callEntriesCp.shift();
+                    }
+                }
+
+                this.callMap.set(name, callEntriesCp);
+            } else {
+                return callEntries.shift()!.args;
+            }
+        }
+
+        return undefined;
+    }
+
+    pushCall(source: string, target: string, messages: Array<string>) {
+        if (this.callMap.has(target)) {
+            this.callMap.get(target)!.push({ source: source, args: messages } as callEntry);
+        } else {
+            this.callMap.set(target, [{ source: source, args: messages } as callEntry]);
+        }
+    }
+
     dbg_listVars(eid: number): void {
         let mem: G4DMemory | undefined = this.varMap.get(eid);
         if (mem !== undefined) {
@@ -509,7 +597,5 @@ export class Game4DSystem {
             console.log("No vars here!");
         }
     }
-
-
 
 }

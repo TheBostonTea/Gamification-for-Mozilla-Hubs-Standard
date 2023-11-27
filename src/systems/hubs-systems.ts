@@ -81,7 +81,9 @@ import { questionSystem } from "../bit-systems/question-system";
 import { QuestionInterfaceSystem } from "../bit-systems/question-interface-system";
 import { scriptSystem } from "../bit-systems/script-system";
 import { game4dObjectSystem } from "../bit-systems/game4d-object-system";
-import { game4dOnClickystem } from "../bit-systems/game4d-onclick-system";
+import { game4dOnClicksystem } from "../bit-systems/game4d-onclick-system";
+import { game4dOnMoveAtSystem } from "../bit-systems/game4d-onmoveat-system";
+import { game4dOnCallSystem } from "../bit-systems/game4d-oncall-system";
 
 declare global {
   interface Window {
@@ -268,14 +270,16 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
   // Probably put new systems here! It's as of yet unclear what the ordering might be,
   // Or what the dependencies will be, but here is probably a safe bet.
   // NOTE: Needs to run after interaction systems that set "Interactable".
-  doorSystem(world);
-  QuestionInterfaceSystem(world, sceneEl.is("frozen"));
-  questionSystem(world);
-  scriptSystem(world);
+  // doorSystem(world);
+  // QuestionInterfaceSystem(world, sceneEl.is("frozen"));
+  // questionSystem(world);
+  // scriptSystem(world);
 
   //Game4d Systems here!
   game4dObjectSystem(world);
-  game4dOnClickystem(world);
+  game4dOnClicksystem(world);
+  game4dOnMoveAtSystem(world, t);
+  game4dOnCallSystem(world);
 
   // All systems that update text properties should run before this
   textSystem(world);

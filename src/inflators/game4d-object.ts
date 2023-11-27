@@ -1,12 +1,12 @@
 import { addComponent } from "bitecs";
 import { HubsWorld } from "../app";
-import { Game4dobject, Networked, NetworkedGame4dobject } from "../bit-components";
+import { Game4dObject, Networked, NetworkedGame4dObject } from "../bit-components";
+// import { PlayerInfo } from "../game4d";
 
 // Bitflag for is active yes/no. 
 // TODO: deprecate flags!
 export const GAME4DOBJECT_FLAGS = {
-    ACTIVE: 1 << 0,
-    HASVARIABLE: 1 << 1
+    ACTIVE: 1 << 0
 }
 
 // const Game4dTypes = new Map ([
@@ -17,21 +17,27 @@ export const GAME4DOBJECT_FLAGS = {
 // ]);
 
 export type G4DObjectParams = {
-    variables: string
+    identifier: string,
+    variables: string,
+    isActive: boolean
 }
 
-export function inflateG4DObject( world: HubsWorld, eid: number, params: G4DObjectParams) {
+export function inflateG4DObject(world: HubsWorld, eid: number, params: G4DObjectParams) {
 
     console.log("Inflate G4DObject %d", eid);
-    addComponent(world, Game4dobject, eid);
+    addComponent(world, Game4dObject, eid);
     addComponent(world, Networked, eid);
-    addComponent(world, NetworkedGame4dobject, eid);
+    addComponent(world, NetworkedGame4dObject, eid);
 
-    Game4dobject.varid[eid] = G4D.registerVars(eid, params.variables);
-    Game4dobject.actid[eid] = G4D.getActid(eid)!;
+    Game4dObject.identifier[eid] = APP.getSid(params.identifier);
+    Game4dObject.varid[eid] = G4D.registerVars(eid, params.variables)!;
+    Game4dObject.actid[eid] = G4D.getActid(eid)!;
 
-    NetworkedGame4dobject.varid[eid] = Game4dobject.varid[eid];
-    NetworkedGame4dobject.updates[eid] = APP.getSid("");
-    NetworkedGame4dobject.actid[eid] = Game4dobject.actid[eid];
-    NetworkedGame4dobject.actions[eid] = APP.getSid("");
+    params.isActive && (Game4dObject.flags[eid] |= GAME4DOBJECT_FLAGS.ACTIVE)
+
+    NetworkedGame4dObject.varid[eid] = Game4dObject.varid[eid];
+    NetworkedGame4dObject.updates[eid] = APP.getSid("");
+    NetworkedGame4dObject.actid[eid] = Game4dObject.actid[eid];
+    NetworkedGame4dObject.actions[eid] = APP.getSid("");
+
 }

@@ -4,7 +4,7 @@ import {
   $isStringType,
   NetworkedDoor,
   NetworkedFloatyObject,
-  NetworkedGame4dobject,
+  NetworkedGame4dObject,
   NetworkedMediaFrame,
   NetworkedPDF,
   NetworkedTransform,
@@ -51,7 +51,7 @@ schemas.set(NetworkedFloatyObject, {
 });
 schemas.set(NetworkedPDF, NetworkedPDFSchema);
 schemas.set(NetworkedDoor, NetworkedDoorSchema);
-schemas.set(NetworkedGame4dobject, NetworkedG4DObjectSchema);
+schemas.set(NetworkedGame4dObject, NetworkedG4DObjectSchema);
 
 export const networkableComponents = Array.from(schemas.keys());
 

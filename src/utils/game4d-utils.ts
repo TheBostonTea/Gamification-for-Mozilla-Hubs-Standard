@@ -1,6 +1,8 @@
 import { element, string } from "prop-types";
-import { G4DGetValFromType, BehaviorNodeFormat, isActionNodeFormat, isLoopingNodeFormat, ExpressionFormat, isLogicBlockFormat, IfElseNodeFormat, isExpressionFormat, isNewVarNodeFormat } from "../game4d";
+import { G4DGetValFromType, BehaviorNodeFormat, isActionNodeFormat, isLoopingNodeFormat, ExpressionFormat, isLogicBlockFormat, IfElseNodeFormat, isExpressionFormat, isNewVarNodeFormat, PlayerInfo } from "../game4d";
 import { G4DOperator, G4DFunct, fetchAction, fetchOperator } from "./game4d-api";
+import { HubsWorld } from "../app";
+import { Vector3 } from "three";
 
 const MAX_LOOP = 10000;
 
@@ -161,6 +163,7 @@ export class G4DInnerMemory extends G4DMemory {
 
         if (args.length !== params.length) {
             console.error(`Amount of arguments supplied is not equal to the amount of parameters for this behavior: expected ${params.length}, got ${args.length}!`);
+            console.log(...args);
             return false;
         }
 
@@ -385,8 +388,6 @@ function convertLiteral(literal: string): G4DType {
         return { debug_info: "Malformed Literal: incorrect amount of \':\' ", content: literal } as G4DUNKNOWNTYPE
     }
 }
-
-
 
 export class G4DBehavior {
     name: string;
